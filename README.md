@@ -28,7 +28,7 @@ For the experiments with only WCNs, we convert the WCNs into sequences and fed i
 
 We use both discriminative (STC) and generative (TFHD) approaches for the output module:
 
-- STC (**S**emantic **T**uple **C**lassifier): The `act`, `slot` and `value` are classified in a hierarchical order.
+- STC (**S**emantic **T**uple **C**lassifier): We build two classifiers, the first one for `act-slot` pairs and the second one for `value`.
 - TFHD (**T**rans**F**ormer-based **H**ierarchical **D**ecoder): We adopt the method from [this paper](https://arxiv.org/pdf/1904.04498.pdf). The hierarchical model builds classifiers for the `acts` and `slots`, and generate values with a sequence-to-sequence model with pointer network. We make two  changes as follows:
   - Change the backbone model from LSTM to Transformer;
   - Embed the `acts` and `slots` with BERT. 
