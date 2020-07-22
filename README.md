@@ -92,7 +92,22 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
   ./run/test/test_wcn_TFHD_BERT.sh
   ```
 
-## 3. Citation
+## 3. Results
+
+You are expected to get the following results:
+
+| Model           | with system act | F1 score (%) | Acc. (%) |
+| --------------- | --------------- | ------------ | -------- |
+| WCN-BERT + STC  | True            | 87.86        | 81.24    |
+| WCN-BERT + STC  | False           | 86.71        | 79.68    |
+| WCN-BERT + TFHD | True            | 87.37        | 80.77    |
+| WCN-BERT + TFHD | False           | 86.15        | 79.12    |
+
+Results can be different due to various environments and hyper-parameter settings.
+
+
+
+## 4. Citation
 
 If you use our models, please cite the following papers:
 
