@@ -40,13 +40,13 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
 - train the model
 
   ```bash
-  ./run/train_wcn_STC_SA_BERT.sh
+  ./run/train/train_wcn_STC_SA_BERT.sh
   ```
 
 - test the model
 
   ```bash
-  ./run/test_wcn_STC_SA_BERT.sh
+  ./run/test/test_wcn_STC_SA_BERT.sh
   ```
 
 ### 2.2 WCN + System Act + TFHD
@@ -54,22 +54,43 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
 - train the model
 
   ```bash
-  ./run/train_wcn_TFHD_SA_BERT.sh
+  ./run/train/train_wcn_TFHD_SA_BERT.sh
   ```
 
 - test the model
 
   ```bash
-  ./run/test_wcn_TFHD_SA_BERT.sh
+  ./run/test/test_wcn_TFHD_SA_BERT.sh
   ```
 
 ### 2.3 WCN + STC
 
-- [ ] TODO
+- train the model
+
+  ```bash
+  ./run/train/train_wcn_STC_BERT.sh
+  ```
+
+- test the model
+
+  ```bash
+  ./run/test/test_wcn_STC_BERT.sh
+  ```
+
 
 ### 2.4 WCN + TFHD
 
-- [ ] TODO
+- train the model
+
+  ```bash
+  ./run/train/train_wcn_TFHD_BERT.sh
+  ```
+
+- test the model
+
+  ```bash
+  ./run/test/test_wcn_TFHD_BERT.sh
+  ```
 
 ## 3. Citation
 

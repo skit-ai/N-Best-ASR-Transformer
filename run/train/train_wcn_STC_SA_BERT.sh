@@ -38,7 +38,8 @@ seed=999
 
 #################### cmd ####################
 
-python3 main_STC_SA_BERT.py \
+python3 WCN_BERT_STC.py \
+    --with_system_act \
     --emb_size ${es} --hidden_size ${hs} ${msl:+--max_seq_len ${msl}} \
     --n_layers ${nl} --n_head ${nh} --d_k ${dk} --d_v ${dv} \
     --score_util ${score_util} --sent_repr ${sent_repr} --cls_type ${cls_type} \

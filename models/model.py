@@ -2,12 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# from models.transformer.Models import Encoder as TransformerEncoder
-from models.transformer.ScoreAwareModels import Encoder as ScoreAwareTransformerEncoder
 from models.transformer.Bert_ScoreAwareModels import BertEncoder as ScoreAwareBertEncoder
 from models.modules.attention import SimpleSelfAttention
 from models.modules.hierarchical_classifier import HierarchicalClassifier
-from models.modules.transformer_hd import TransHierarDecoder
 from models.modules.transformer_hd_with_bert import TransHierarDecoder_withBERT
 from utils.wcn_bin import bin_merger, length_reorder, length_order_back
 
@@ -41,12 +38,6 @@ class WCN_Transformer_STC(nn.Module):
         if pretrained_model_opts is not None:
             bert_config = pretrained_model_opts['model'].config
             self.utt_sa_bert_encoder = ScoreAwareBertEncoder(bert_config, pretrained_model_opts,opt.score_util)
-        else:
-            self.utt_sa_encoder = ScoreAwareTransformerEncoder(
-                opt.word_vocab_size, opt.max_n_pos, opt.emb_size, opt.n_layers, opt.n_head,
-                opt.d_k, opt.d_v, opt.d_model, opt.hidden_size, opt.dropout, opt.score_util,
-                opt.pos_emb, opt.rel_pos, opt.rel_pos_clip, opt.ex_mask
-            )
 
         self.dropout_layer = nn.Dropout(opt.dropout)
 
@@ -61,9 +52,6 @@ class WCN_Transformer_STC(nn.Module):
 
         if self.sent_repr in ['attn', 'bin_sa', 'bin_sa_cls', 'tok_sa_cls']:
             self.slf_attn = SimpleSelfAttention(opt.d_model, opt.dropout, opt.device)
-        elif self.sent_repr == 'bin_lstm':
-            self.lstm = LSTMEncoder(opt.d_model, opt.d_model, dropout=opt.dropout, device=opt.device)
-            self.slf_attn = SimpleSelfAttention(opt.d_model * 2, opt.dropout, opt.device)
 
         if self.cls_type == 'nc':
             self.linear_layer = nn.Linear(fea_dim, opt.label_vocab_size)
@@ -71,12 +59,7 @@ class WCN_Transformer_STC(nn.Module):
             self.clf = HierarchicalClassifier(opt.top2bottom_dict, fea_dim, opt.label_vocab_size, opt.dropout)
         elif self.cls_type == 'tf_hd':
             self.fea_proj = nn.Linear(fea_dim, opt.d_model * 2)
-            if pretrained_model_opts is None:
-                self.tf_hd = TransHierarDecoder(opt.dec_word_vocab_size, opt.act_vocab_size, opt.slot_vocab_size,
-                    opt.emb_size, opt.d_model, opt.hidden_size, opt.max_n_pos,
-                    opt.n_dec_layers, opt.n_head, opt.d_k, opt.d_v, opt.dropout, with_ptr=opt.with_ptr,
-                    decoder_tied=opt.decoder_tied)
-            else:
+            if pretrained_model_opts is not None:
                 bert_emb = self.utt_sa_bert_encoder.embeddings
                 self.tf_hd = TransHierarDecoder_withBERT(opt.dec_word_vocab_size, opt.act_vocab_size, opt.slot_vocab_size,
                     opt.emb_size, opt.d_model, opt.hidden_size, opt.max_n_pos,
@@ -89,17 +72,6 @@ class WCN_Transformer_STC(nn.Module):
 
         # weight initialization
         self.init_weight(opt.init_type, opt.init_range)
-
-    def init_pre_word_emb(self, word2idx, ext_word2idx, ext_emb, fix_flag=False):
-        # word2idx: original word vocab
-        # ext_word2idx: ori_vocab intersection pre_vocab
-        # ext_emb: idx corresponds to that in ext_word2idx
-        for word in word2idx:
-            if word in ext_word2idx:
-                self.utt_sa_encoder.src_word_emb.weight.data[word2idx[word]] = \
-                    ext_emb[ext_word2idx[word]]
-        if fix_flag:
-            self.utt_sa_encoder.src_word_emb.weight.requires_grad = False
 
     def init_weight(self, init_type='uf', init_range=0.2):
         named_parameters = list(filter(
@@ -127,12 +99,6 @@ class WCN_Transformer_STC(nn.Module):
             sent_fea = enc_out.max(1)[0]  # (b, dm)
         elif self.sent_repr == 'attn':  # self attn
             sent_fea = self.slf_attn(enc_out, lens)
-        elif self.sent_repr == 'bin_lstm':  # bin-level LSTM + self attn
-            bin_outs, bin_lens = bin_merger(enc_out, src_pos, src_score, src_score_scaler=src_score_scaler)
-            sorted_bin_outs, sorted_bin_lens, indices = length_reorder(bin_outs, bin_lens)
-            sorted_lstm_out, (ht, ct) = self.lstm(sorted_bin_outs, sorted_bin_lens)  # (b, l', dm*2)
-            ori_lstm_out = length_order_back(sorted_lstm_out, indices)
-            sent_fea = self.slf_attn(ori_lstm_out, bin_lens)  # (b, dm*2)
         elif self.sent_repr == 'bin_sa':  # bin-level self attn
             bin_outs, bin_lens = bin_merger(enc_out, src_pos, src_score, src_score_scaler=src_score_scaler)
             sent_fea = self.slf_attn(bin_outs, bin_lens)
@@ -161,16 +127,10 @@ class WCN_Transformer_STC(nn.Module):
     def encode_utt_sa_one_seq(self, inputs, masks):
         # inputs
         if self.pretrained_model_opts is not None:
-            model_inputs_utt_sa = inputs['pretrained_inputs_utt_sa']
+            model_inputs_utt_sa = inputs['pretrained_inputs']
             src_score_scaler = model_inputs_utt_sa['scores_scaler']
             lens = model_inputs_utt_sa['token_lens']
             self_mask = masks['self_mask']
-        else:
-            model_inputs_utt_sa = inputs['normal_inputs_utt_sa']
-            src_score_scaler = None
-            lens = model_inputs_utt_sa['token_lens']
-            self_mask = masks['self_mask']
-            non_pad_mask = masks['non_pad_mask']
 
         src_seq, src_pos, src_score = \
             model_inputs_utt_sa['tokens'], model_inputs_utt_sa['positions'], model_inputs_utt_sa['scores']
@@ -178,8 +138,6 @@ class WCN_Transformer_STC(nn.Module):
         # encoder
         if self.pretrained_model_opts is not None:
             enc_out = self.utt_sa_bert_encoder(model_inputs_utt_sa, attention_mask=self_mask, default_pos=False)  # enc_out -> (b, l, dm)
-        else:
-            enc_out = self.utt_sa_encoder(model_inputs_utt_sa, self_mask, non_pad_mask)  # utt_enc_out -> (b, l1, dm)
 
         # utterance-level feature
         lin_in = self.get_sent_repr(enc_out, lens, src_pos, src_score, src_score_scaler)
@@ -217,13 +175,7 @@ class WCN_Transformer_STC(nn.Module):
                     extra_zeros = None
                 else:
                     extra_zeros = torch.zeros(1, len(oov_lists[i])).to(self.device)
-                if self.pretrained_model_opts is None:
-                    act_scores, slot_scores, value_scores = self.tf_hd(
-                        src_seq[i:i+1], src_score[i:i+1],
-                        enc_out[i:i+1], lin_in[i:i+1],
-                        act_inputs[i], act_slot_pairs[i], value_inps[i],
-                        extra_zeros, enc_batch_extend_vocab_idx[i])
-                else:
+                if self.pretrained_model_opts is not None:
                     act_scores, slot_scores, value_scores = self.tf_hd(
                         src_seq[i:i+1], src_score[i:i+1],
                         enc_out[i:i+1], lin_in[i:i+1],
@@ -273,7 +225,6 @@ class WCN_Transformer_STC(nn.Module):
                 utt_src, utt_score, utt_enc_out, utt_fea,
                 extra_zeros, utt_extend_idx, memory, oov_lists[i],
                 device, tokenizer=tokenizer)
-            # print('results:', triples)
             batch_pred_triples.append(triples)
 
         return batch_pred_triples

@@ -23,9 +23,9 @@ from utils.util import make_logger, get_exp_dir_bert
 from utils.fscore import update_f1, compute_f1
 from utils.dataset.wcn_systemAct import read_wcn_data, prepare_wcn_dataloader
 from utils.gpu_selection import auto_select_gpu
-from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq
+from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq, prepare_inputs_for_bert_xlnet
 from utils.pos_util import get_sequential_pos
-from utils.mask_util import prepare_utt_and_sa_mask_one_seq
+from utils.mask_util import prepare_mask
 from utils.STC_util import convert_labels, reverse_top2bottom, onehot_to_scalar
 from models.model import make_model
 from models.optimization import BertAdam
@@ -65,7 +65,6 @@ def parse_arguments():
 
     ######################### training & testing options #########################
     parser.add_argument('--testing', action='store_true', help=' test your model (default is training && testing)')
-    parser.add_argument('--analysis', action='store_true', help=' analysis an output file')
     parser.add_argument('--deviceId', type=int, default=-1, help='train model on ith gpu. -1:cpu, 0:auto_select')
     parser.add_argument('--random_seed', type=int, default=999, help='initial random seed')
     parser.add_argument('--l2', type=float, default=0, help='weight decay')
@@ -81,6 +80,9 @@ def parse_arguments():
     parser.add_argument('--warmup_proportion', type=float, default=0.1, help='warmup propotion')
     parser.add_argument('--init_type', default='uf', choices=['uf', 'xuf', 'normal'], help='init type')
     parser.add_argument('--init_range', type=float, default=0.2, help='init range, for naive uniform')
+
+    ######################## system act #########################
+    parser.add_argument('--with_system_act', action='store_true', help='whether to include the last system act')
 
     opt = parser.parse_args()
 
@@ -205,6 +207,7 @@ def train_epoch(model, data, opt, memory):
     TP, FP, FN = 0, 0, 0
     corr, tot = 0, 0
     losses = []
+
     for step, batch in enumerate(data):
         # prepare data
         batch_in, batch_pos, batch_score, \
@@ -216,20 +219,32 @@ def train_epoch(model, data, opt, memory):
 
         # prepare inputs for BERT/XLNET
         inputs = {}
-        batch_sa_pos = get_sequential_pos(batch_sa)
-        pretrained_inputs_utt_sa = prepare_inputs_for_bert_xlnet_one_seq(
-            raw_in, raw_lens, batch_pos, batch_score,
-            raw_sa, lens_sysact, batch_sa_pos, batch_sa_parent, batch_sa_sib, batch_sa_type,
-            opt.tokenizer,
-            cls_token=opt.tokenizer.cls_token,
-            sep_token=opt.tokenizer.sep_token,
-            cls_token_segment_id=0,
-            pad_on_left=False,
-            pad_token_segment_id=0,
-            device=opt.device
-        )
-        inputs['pretrained_inputs_utt_sa'] = pretrained_inputs_utt_sa
-        masks = prepare_utt_and_sa_mask_one_seq(pretrained_inputs_utt_sa)
+        if opt.with_system_act:
+            batch_sa_pos = get_sequential_pos(batch_sa)
+            pretrained_inputs = prepare_inputs_for_bert_xlnet_one_seq(
+                raw_in, raw_lens, batch_pos, batch_score,
+                raw_sa, lens_sysact, batch_sa_pos, batch_sa_parent, batch_sa_sib, batch_sa_type,
+                opt.tokenizer,
+                cls_token=opt.tokenizer.cls_token,
+                sep_token=opt.tokenizer.sep_token,
+                cls_token_segment_id=0,
+                pad_on_left=False,
+                pad_token_segment_id=0,
+                device=opt.device
+            )
+        else:
+            pretrained_inputs = prepare_inputs_for_bert_xlnet(
+                raw_in, raw_lens, opt.tokenizer, batch_pos, batch_score,
+                cls_token_at_end=False,
+                cls_token=opt.tokenizer.cls_token,
+                sep_token=opt.tokenizer.sep_token,
+                cls_token_segment_id=0,
+                pad_on_left=False,
+                pad_token_segment_id=0,
+                device=opt.device
+            )
+        inputs['pretrained_inputs'] = pretrained_inputs
+        masks = prepare_mask(pretrained_inputs)
 
         # forward
         top_scores, bottom_scores_dict, batch_preds = model(inputs, masks)
@@ -298,23 +313,34 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
         # prepare inputs for BERT/XLNET
         inputs = {}
-        batch_sa_pos = get_sequential_pos(batch_sa)
-        pretrained_inputs_utt_sa = prepare_inputs_for_bert_xlnet_one_seq(
-            raw_in, raw_lens, batch_pos, batch_score,
-            raw_sa, lens_sysact, batch_sa_pos, batch_sa_parent, batch_sa_sib, batch_sa_type,
-            opt.tokenizer,
-            cls_token=opt.tokenizer.cls_token,
-            sep_token=opt.tokenizer.sep_token,
-            cls_token_segment_id=0,
-            pad_on_left=False,
-            pad_token_segment_id=0,
-            device=opt.device
-        )
-        inputs['pretrained_inputs_utt_sa'] = pretrained_inputs_utt_sa
-        masks = prepare_utt_and_sa_mask_one_seq(pretrained_inputs_utt_sa)
+        if opt.with_system_act:
+            batch_sa_pos = get_sequential_pos(batch_sa)
+            pretrained_inputs = prepare_inputs_for_bert_xlnet_one_seq(
+                raw_in, raw_lens, batch_pos, batch_score,
+                raw_sa, lens_sysact, batch_sa_pos, batch_sa_parent, batch_sa_sib, batch_sa_type,
+                opt.tokenizer,
+                cls_token=opt.tokenizer.cls_token,
+                sep_token=opt.tokenizer.sep_token,
+                cls_token_segment_id=0,
+                pad_on_left=False,
+                pad_token_segment_id=0,
+                device=opt.device
+            )
+        else:
+            pretrained_inputs = prepare_inputs_for_bert_xlnet(
+                raw_in, raw_lens, opt.tokenizer, batch_pos, batch_score,
+                cls_token_at_end=False,
+                cls_token=opt.tokenizer.cls_token,
+                sep_token=opt.tokenizer.sep_token,
+                cls_token_segment_id=0,
+                pad_on_left=False,
+                pad_token_segment_id=0,
+                device=opt.device
+            )
+        inputs['pretrained_inputs'] = pretrained_inputs
+        masks = prepare_mask(pretrained_inputs)
 
         # forward
-        opt.optimizer.zero_grad()
         top_scores, bottom_scores_dict, batch_preds = model(inputs, masks, return_attns=False)
         loss, _ = cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt)
         losses.append(loss)
@@ -461,14 +487,16 @@ if __name__ == '__main__':
 
     # memory
     memory = torch.load(os.path.join(opt.dataroot, 'memory.pt'))
-    opt.word_vocab_size = len(memory['word2idx'])
-    opt.sysact_vocab_size = len(memory['sysact2idx'])
+    opt.word_vocab_size = opt.tokenizer.vocab_size  # subword-level
+    if opt.with_system_act:
+        opt.sysact_vocab_size = len(memory['sysact2idx'])
     opt.label_vocab_size = len(memory['label2idx'])
     opt.top_label_vocab_size = len(memory['toplabel2idx'])
     opt.top2bottom_dict = memory['top2bottom_dict']
     memory['bottom2top_mat'] = reverse_top2bottom(memory['top2bottom_dict'])
     print('word vocab size:', opt.word_vocab_size)
-    print('system act vocab size:', opt.sysact_vocab_size)
+    if opt.with_system_act:
+        print('system act vocab size:', opt.sysact_vocab_size)
     print('#labels:', opt.label_vocab_size)
     print('#top-labels:', opt.top_label_vocab_size)
     print(opt)

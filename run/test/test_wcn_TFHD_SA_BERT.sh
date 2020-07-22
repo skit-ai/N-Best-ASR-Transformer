@@ -46,8 +46,9 @@ seed=999
 
 #################### cmd ####################
 
-python3 main_TFHD_SA_BERT.py \
+python3 WCN_BERT_TFHD.py \
     --testing \
+    --with_system_act \
     --emb_size ${es} --hidden_size ${hs} ${msl:+--max_seq_len ${msl}} \
     --n_layers ${nl} --n_head ${nh} --d_k ${dk} --d_v ${dv} \
     --n_dec_layers ${n_dec_layers}\

@@ -14,12 +14,12 @@ def get_attn_key_pad_mask(seq_k, seq_q):
     return padding_mask
 
 
-def prepare_utt_and_sa_mask_one_seq(inputs_utt_sa):
+def prepare_mask(inputs):
     masks = {}
-    tokens = inputs_utt_sa['tokens']
-    utt_sa_self_mask = get_attn_key_pad_mask(tokens, tokens)
+    tokens = inputs['tokens']
+    self_mask = get_attn_key_pad_mask(tokens, tokens)
     non_pad_mask = get_non_pad_mask(tokens)
-    masks['self_mask'] = utt_sa_self_mask
+    masks['self_mask'] = self_mask
     masks['non_pad_mask'] = non_pad_mask
     return masks
 

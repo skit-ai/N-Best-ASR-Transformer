@@ -13,7 +13,7 @@ cls_type='stc'
 #################### data & vocab dirs ####################
 dataset="dstc2"
 dataroot="dstc2_data/processed_data"
-exp_path="exp/exp_STC_SA_BERT/"
+exp_path="exp/exp_STC_BERT/"
 
 #################### pretrained embedding ####################
 fix_bert_model=false
@@ -29,8 +29,8 @@ bs=32
 mn=5.0
 me=50
 optim="bertadam"  # bertadam/adamw
-lr=3e-5  # for non-bert params
-bert_lr=3e-5
+lr=5e-5  # for non-bert params
+bert_lr=5e-5
 wp=0.1  #warmup
 init_type='uf'  # uf/xuf
 init_range=0.02
@@ -38,8 +38,7 @@ seed=999
 
 #################### cmd ####################
 
-python3 main_STC_SA_BERT.py \
-    --testing \
+python3 WCN_BERT_STC.py \
     --emb_size ${es} --hidden_size ${hs} ${msl:+--max_seq_len ${msl}} \
     --n_layers ${nl} --n_head ${nh} --d_k ${dk} --d_v ${dv} \
     --score_util ${score_util} --sent_repr ${sent_repr} --cls_type ${cls_type} \
