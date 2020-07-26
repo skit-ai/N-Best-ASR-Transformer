@@ -26,8 +26,9 @@ The WCNs and system acts are flattened into a sequence as the figure below shows
 
 For the experiments with only WCNs, we convert the WCNs into sequences and fed into BERT. For the experiments with WCNs and the last system act, they are flattened into one sequence (see above).
 
-We use both discriminative (STC) and generative (TFHD) approaches for the output module:
+We use both discriminative (NC & STC) and generative (TFHD) approaches for the output module:
 
+- NC (**N**aive **C**lassifier): All `act-slot-value` triplets are classified by one classifier. In this case, there may be multiple values for a certain `act-slot` pair. This method is not presented in the paper.
 - STC (**S**emantic **T**uple **C**lassifier): We build two classifiers, the first one for `act-slot` pairs and the second one for `value`.
 - TFHD (**T**rans**F**ormer-based **H**ierarchical **D**ecoder): We adopt the method from [this paper](https://arxiv.org/pdf/1904.04498.pdf). The hierarchical model builds classifiers for the `acts` and `slots`, and generate values with a sequence-to-sequence model with pointer network. We make two  changes as follows:
   - Change the backbone model from LSTM to Transformer;
@@ -35,7 +36,21 @@ We use both discriminative (STC) and generative (TFHD) approaches for the output
 
 Recommended hyper-parameters have been given in the scripts, and you can adjust them according to your needs. 
 
-### 2.1 WCN + System Act + STC
+### 2.1 WCN + System Act + NC
+
+- train the model
+
+  ```bash
+  ./run/train/train_wcn_NC_SA_BERT.sh
+  ```
+
+- test the model
+
+  ```bash
+  ./run/test/test_wcn_NC_SA_BERT.sh
+  ```
+
+### 2.2 WCN + System Act + STC
 
 - train the model
 
@@ -49,7 +64,7 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
   ./run/test/test_wcn_STC_SA_BERT.sh
   ```
 
-### 2.2 WCN + System Act + TFHD
+### 2.3 WCN + System Act + TFHD
 
 - train the model
 
@@ -63,7 +78,21 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
   ./run/test/test_wcn_TFHD_SA_BERT.sh
   ```
 
-### 2.3 WCN + STC
+### 2.4 WCN + NC
+
+- train the model
+
+  ```bash
+  ./run/train/train_wcn_NC_BERT.sh
+  ```
+
+- test the model
+
+  ```bash
+  ./run/test/test_wcn_NC_BERT.sh
+  ```
+
+### 2.5 WCN + STC
 
 - train the model
 
@@ -78,7 +107,7 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
   ```
 
 
-### 2.4 WCN + TFHD
+### 2.6 WCN + TFHD
 
 - train the model
 
