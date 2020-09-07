@@ -1,6 +1,6 @@
 # WCN-BERT
 
-Jointly encoding word confusion networks (WCNs) and dialogue context with BERT for spoken language understanding (SLU). The [paper](https://arxiv.org/pdf/2005.11640.pdf) is submitted to [INTERSPEECH 2020](http://www.interspeech2020.org/).
+Jointly encoding word confusion networks (WCNs) and dialogue context with BERT for spoken language understanding (SLU). The [paper](https://arxiv.org/pdf/2005.11640.pdf) is accepted by [INTERSPEECH 2020](http://www.interspeech2020.org/).
 
 ## 0. Setup
 
