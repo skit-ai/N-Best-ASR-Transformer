@@ -12,6 +12,18 @@ pip3 install -r requirements.txt
 
 We conduct our experiments on a benchmark SLU dataset, **DSTC2**. Origin data can be obtained [HERE](http://camdial.org/~mh521/dstc/).
 
+- Data preprocessing:
+    ```bash
+    python helpers/process_dstc2_data.py \
+        --data_dir <input_dir>
+        --prun_opt rule \
+        --prun_score_thres 1e-3 \
+        --bin_norm \
+        --rm_null \
+        --subdir <output_dir>
+    ```
+    Note that you should replace the <input_dir> with the original DSTC2 data, and replace the <output_dir> with your own output directory.
+
 The data is preprocessed and saved in `dstc2_data/processed_data/*`, where each line is a data sample in the form of:
 
 ```
