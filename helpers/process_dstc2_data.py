@@ -6,11 +6,11 @@ from collections import Counter
 import torch
 import numpy as np
 
-install_path = os.path.dirname(os.path.abspath(__file__))
+install_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(install_path)
 
 import utils.Constants as Constants
-from helpers.system_act_split_map import SPLIT_MAP
+from helpers.act_slot_split_map import SPLIT_MAP
 
 interjections_words = [
     'ah', 'aha', 'ahh', 'eh', 'er', 'em', 'erm',
@@ -441,7 +441,7 @@ parser.add_argument('--prun_opt', choices=['no', 'rule'], default='no', help='pr
 parser.add_argument('--prun_score_thres', type=float, default=None)
 parser.add_argument('--bin_norm', action='store_true', help='bin-level normalization')
 parser.add_argument('--rm_null', action='store_true', help='remove null tokens')
-parser.add_argument('--subdir', required=True, help='output directory')
+parser.add_argument('--out_dir', required=True, help='output directory')
 opt = parser.parse_args()
 print(opt)
 
@@ -450,13 +450,13 @@ train_scp_fn = os.path.join(data_dir, 'scripts/config/dstc2_train.flist')
 valid_scp_fn = os.path.join(data_dir, 'scripts/config/dstc2_dev.flist')
 test_scp_fn = os.path.join(data_dir, 'scripts/config/dstc2_test.flist')
 
-processed_data_dir = os.path.join(data_dir, 'processed_data')
+processed_data_dir = os.path.join(opt.out_dir, 'processed_data')
 
 subdir_dict = {
     'no': 'raw' + '_rmnull' * opt.rm_null,
     'rule': 'rule_prun_thres_%s' % (opt.prun_score_thres) + '_norm' * opt.bin_norm + '_rmnull' * opt.rm_null,
 }
-processed_wcn_data_dir = os.path.join(processed_data_dir, opt.subdir, subdir_dict[opt.prun_opt])
+processed_wcn_data_dir = os.path.join(processed_data_dir, subdir_dict[opt.prun_opt])
 
 if not os.path.exists(processed_data_dir): os.makedirs(processed_data_dir)
 if not os.path.exists(processed_wcn_data_dir): os.makedirs(processed_wcn_data_dir)

@@ -20,7 +20,7 @@ We conduct our experiments on a benchmark SLU dataset, **DSTC2**. Origin data ca
         --prun_score_thres 1e-3 \
         --bin_norm \
         --rm_null \
-        --subdir <output_dir>
+        --out_dir <output_dir>
     ```
     Note that you should replace the <input_dir> with the original DSTC2 data, and replace the <output_dir> with your own output directory.
 
