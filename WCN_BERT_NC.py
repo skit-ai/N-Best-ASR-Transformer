@@ -130,7 +130,7 @@ def pred_one_sample(score, memory, opt):
     return pred_classes
 
 
-def filter_informative(labels, ontology):
+def filter_informative(labels, ontology):len_slot
     # filter tuples by whether they are informative according to ontology
     new_labels = []
     for lbl in labels:

@@ -224,9 +224,171 @@ def prepare_inputs_for_bert_xlnet_sysact(sentences, word_lengths, tokenizer, pad
             'segments': segments_tensor, 'selects': selects_tensor, 'copies': copies_tensor, 'mask': input_mask}
 
 
-# Regard utt & sysact as one sequence
-# [CLS] utt [SEP] sysact [SEP]
 def prepare_inputs_for_bert_xlnet_one_seq(utterances, utt_lens, padded_utt_pos_ids, padded_utt_scores,
+        system_acts, sa_lens, padded_sa_pos_ids, padded_sa_parents, padded_sa_sibs, padded_sa_types, tokenizer,
+        cls_token_at_end=False, pad_on_left=False, cls_token='[CLS]', sep_token='[SEP]',
+        pad_token=0, sequence_a_segment_id=0, sequence_b_segment_id=1,
+        cls_token_segment_id=1, pad_token_segment_id=0, device=None):
+
+    ''' ONLY for BERT '''
+    assert not cls_token_at_end and not pad_on_left
+    assert cls_token_segment_id == 0
+
+    pad_pos = 0
+    pad_score = -1
+    pad_parent = -2  # also pad sibling
+
+    tokens, position_ids = [], []  # including utt & sysact
+    scores, scores_scaler = [], []
+    sa_parents, sa_sibs = [], []
+    segment_ids = []
+    selected_indexes = []
+    utt_token_lens, sa_token_lens = [], []
+
+    assert len(utterances) == len(system_acts)
+    batch_size = len(utterances)
+
+    for i in range(batch_size):
+        selected_index = []
+        ts, tok_ps, tok_ss, tok_sc, si = [], [], [], [], []
+        tok_sps, tok_ssi = [], []
+
+        # 1) tokenize utterance as sequence A
+        sa_seq = system_acts[i]
+        sa_pos_seq = padded_sa_pos_ids[i].tolist()[:sa_lens[i]]
+        sa_par_seq = padded_sa_parents[i].tolist()[:sa_lens[i]]
+        sa_sib_seq = padded_sa_sibs[i].tolist()[:sa_lens[i]]
+        sa_typ_seq = padded_sa_types[i].tolist()[:sa_lens[i]]
+        index_map = {-1: [-1], 0: [0]}  # from word index to sub-word index
+
+        for j, (w, pos, parent, sib, typ) in enumerate(zip(sa_seq, sa_pos_seq, sa_par_seq, sa_sib_seq, sa_typ_seq)):
+            if w == '<cls>':  # skip pre-defined <cls>
+                continue
+            selected_index.append(len(ts) + 1)
+            tok_w = tokenizer.tokenize(w)
+            ts += tok_w
+
+            # update index map
+            index_map[j] = list(range(len(ts) - len(tok_w) + 2, len(ts) + 2))  # +1 due to heading [CLS] # +1 due to USR
+
+            try:
+                cur_max_pos = max(tok_ps)
+            except:
+                cur_max_pos = 0
+
+            tok_ps += list(range(cur_max_pos + 1, cur_max_pos + 1 + len(tok_w)))  # incremental
+            tok_sps += [index_map[parent][0]] * len(tok_w)  # shared parent
+            if sib == 0:
+                first_token_id = selected_index[-1]
+                tok_ssi += ([0] + [first_token_id] * (len(tok_w) - 1))
+            else:
+                before_first_token_id = selected_index[-1] - 1
+                tok_ssi += [before_first_token_id] * len(tok_w)
+            # for consistency
+            tok_ss += [1.0] * len(tok_w)
+            tok_sc += [1.0] * len(tok_w)
+
+        # [SEP]
+        usr_token = "[USR]"
+        ts = ts + [sep_token] + [usr_token]
+        tok_ps += [max(tok_ps) + 1 + 1]
+        tok_ss += [1.0] + [1.0]
+        tok_sc += [1.0] + [1.0]
+        si += [sequence_a_segment_id] * len(ts)
+        # for consistency
+        tok_sps += [pad_parent] + [pad_parent]  # PAD parent for SEP
+        tok_ssi += [pad_parent] + [pad_parent]  # PAD sibling for SEP
+
+
+        # 2) tokenize system act as sequence B
+        len_tokenized_a = len(ts)  # length of tokenized sequence A
+        max_pos_a = max(tok_ps)  # max position id of tokenized sequence A
+        utt_seq = utterances[i]
+        utt_pos_seq = padded_utt_pos_ids[i].tolist()[1:utt_lens[i]+1]  # starts from 1
+        utt_sco_seq = padded_utt_scores[i].tolist()[1:utt_lens[i]+1]
+
+        for w, pos, score in zip(utt_seq, utt_pos_seq, utt_sco_seq):
+            selected_index.append(len(ts) + 1)
+            tok_w = tokenizer.tokenize(w)
+            ts += tok_w
+            tok_ps += [pos] * len(tok_w)  # shared position
+            tok_ss += [score] * len(tok_w)   # shared score
+            tok_sc += [1.0 / len(tok_w)] * len(tok_w)
+            # for consistency
+            tok_sps += [pad_parent] * len(tok_w)  # PAD parent for normal utt
+            tok_ssi += [pad_parent] * len(tok_w)  # PAD sibling for normal utt
+
+        # [SEP]
+        ts += [sep_token]
+        tok_ps += [max(tok_ps) + 1]
+        # tok_sps += [-1]  # no parent for SEP
+        tok_sps += [0]  # parent is CLS for SEP
+        tok_ssi += [0]  # no sibling for SEP
+        si += [sequence_b_segment_id] * (len(ts) - len_tokenized_a)  # sequence B
+        # for consistency
+        tok_ss += [1.0]
+        tok_sc += [1.0]
+
+        sa_token_lens.append(len(ts) - len_tokenized_a)
+
+        # 3) [CLS]
+        sys_token = "[SYS]"
+        ts = [cls_token] + [sys_token] + ts
+        tok_ps = [1] + [1] + tok_ps  # original tok_ps start from 2
+        tok_ss = [1.0] + [1.0] + tok_ss
+        tok_sc = [1.0] + [1.0] + tok_sc
+        tok_sps = [-1] + [-1] + tok_sps
+        tok_ssi = [0] +  [0] + tok_ssi
+        si = [cls_token_segment_id] + [cls_token_segment_id] + si
+
+        # print(ts)
+        tokens.append(ts)
+        position_ids.append(tok_ps)
+        scores.append(tok_ss)
+        scores_scaler.append(tok_sc)
+        sa_parents.append(tok_sps)
+        sa_sibs.append(tok_ssi)
+        segment_ids.append(si)
+        selected_indexes.append(selected_index)
+
+    token_lens = [len(tokenized_text) for tokenized_text in tokens]
+    max_length_of_tokens = max(token_lens)
+    
+    
+    # padding
+    padding_lengths = [max_length_of_tokens - len(tokenized_text) for tokenized_text in tokens]
+    
+    
+    input_mask = [[1] * len(tokenized_text) + [0] * padding_lengths[idx] for idx,tokenized_text in enumerate(tokens)]
+    indexed_tokens = [tokenizer.convert_tokens_to_ids(tokenized_text) + [pad_token] * padding_lengths[idx] for idx,tokenized_text in enumerate(tokens)]
+    padded_tok_positions = [p  +  [pad_pos] + [pad_pos] * padding_lengths[idx] for idx, p in enumerate(position_ids)]
+    padded_tok_scores = [s + [pad_score] * padding_lengths[idx] for idx, s in enumerate(scores)]
+    padded_tok_scores_scaler = [sc + [pad_score] * padding_lengths[idx] for idx, sc in enumerate(scores_scaler)]
+    padded_tok_parents = [p + [pad_parent] * padding_lengths[idx] for idx, p in enumerate(sa_parents)]
+    padded_tok_sibs = [s + [pad_parent] * padding_lengths[idx] for idx, s in enumerate(sa_sibs)]
+    segments_ids = [si + [pad_token_segment_id] * padding_lengths[idx] for idx,si in enumerate(segment_ids)]
+    selected_indexes = [[0 + i + idx * max_length_of_tokens for i in selected_index] for idx,selected_index in enumerate(selected_indexes)]
+
+    input_mask = torch.tensor(input_mask, dtype=torch.long, device=device)
+    tokens_tensor = torch.tensor(indexed_tokens, dtype=torch.long, device=device)
+    positions_tensor = torch.tensor(padded_tok_positions, dtype=torch.long, device=device)
+    scores_tensor = torch.tensor(padded_tok_scores, dtype=torch.float, device=device)
+    scores_scaler_tensor = torch.tensor(padded_tok_scores_scaler, dtype=torch.float, device=device)
+    sa_parents_tensor = torch.tensor(padded_tok_parents, dtype=torch.long, device=device)
+    sa_sibs_tensor = torch.tensor(padded_tok_sibs, dtype=torch.long, device=device)
+    segments_tensor = torch.tensor(segments_ids, dtype=torch.long, device=device)
+    selects_tensor = torch.tensor(list(itertools.chain.from_iterable(selected_indexes)), dtype=torch.long, device=device)
+
+    return {'tokens': tokens_tensor, 'token_lens': token_lens, 'positions': positions_tensor,
+            'utt_token_lens': utt_token_lens, 'sa_token_lens': sa_token_lens,
+            'scores': scores_tensor, 'scores_scaler': scores_scaler_tensor,
+            'parents': sa_parents_tensor, 'sibs': sa_sibs_tensor,
+            'segments': segments_tensor, 'selects': selects_tensor, 'mask': input_mask}
+
+
+# Regard utt & sysact as one sequence
+# [CLS] [USR] utt [SEP] [SYS] sysact [SEP] - tod bert
+def prepare_inputs_for_bert_xlnet_one_seq_tod(utterances, utt_lens, padded_utt_pos_ids, padded_utt_scores,
         system_acts, sa_lens, padded_sa_pos_ids, padded_sa_parents, padded_sa_sibs, padded_sa_types, tokenizer,
         cls_token_at_end=False, pad_on_left=False, cls_token='[CLS]', sep_token='[SEP]',
         pad_token=0, sequence_a_segment_id=0, sequence_b_segment_id=1,
@@ -270,16 +432,17 @@ def prepare_inputs_for_bert_xlnet_one_seq(utterances, utt_lens, padded_utt_pos_i
             tok_sps += [pad_parent] * len(tok_w)  # PAD parent for normal utt
             tok_ssi += [pad_parent] * len(tok_w)  # PAD sibling for normal utt
         # [SEP]
-        ts += [sep_token]
-        tok_ps += [max(tok_ps) + 1]
-        tok_ss += [1.0]
-        tok_sc += [1.0]
+        sys_token = "[SYS]"
+        ts = ts + [sep_token] + [sys_token]
+        tok_ps += [max(tok_ps) + 1 + 1]
+        tok_ss += [1.0] + [1.0]
+        tok_sc += [1.0] + [1.0]
         si += [sequence_a_segment_id] * len(ts)
         # for consistency
-        tok_sps += [pad_parent]  # PAD parent for SEP
-        tok_ssi += [pad_parent]  # PAD sibling for SEP
+        tok_sps += [pad_parent] + [pad_parent]  # PAD parent for SEP
+        tok_ssi += [pad_parent] + [pad_parent]  # PAD sibling for SEP
 
-        utt_token_lens.append(len(ts) + 1)  # +1 due to CLS
+        utt_token_lens.append(len(ts) + 2)  # +1 due to CLS # +1 due to USR
 
         # 2) tokenize system act as sequence B
         len_tokenized_a = len(ts)  # length of tokenized sequence A
@@ -298,7 +461,7 @@ def prepare_inputs_for_bert_xlnet_one_seq(utterances, utt_lens, padded_utt_pos_i
             ts += tok_w
 
             # update index map
-            index_map[j] = list(range(len(ts) - len(tok_w) + 1, len(ts) + 1))  # +1 due to heading [CLS]
+            index_map[j] = list(range(len(ts) - len(tok_w) + 2, len(ts) + 2))  # +1 due to heading [CLS] # +1 due to USR
 
             cur_max_pos = max(tok_ps)
             tok_ps += list(range(cur_max_pos + 1, cur_max_pos + 1 + len(tok_w)))  # incremental
@@ -308,10 +471,11 @@ def prepare_inputs_for_bert_xlnet_one_seq(utterances, utt_lens, padded_utt_pos_i
                 tok_ssi += ([0] + [first_token_id] * (len(tok_w) - 1))
             else:
                 before_first_token_id = selected_index[-1] - 1
-                tok_ssi += [before_first_token_id] * len(tok_w)
-            # for consistency
+                tok_ssi += [before_first_oken_id] * len(tok_w)
+            # for consistencty
             tok_ss += [1.0] * len(tok_w)
             tok_sc += [1.0] * len(tok_w)
+
         # [SEP]
         ts += [sep_token]
         tok_ps += [max(tok_ps) + 1]
@@ -326,14 +490,16 @@ def prepare_inputs_for_bert_xlnet_one_seq(utterances, utt_lens, padded_utt_pos_i
         sa_token_lens.append(len(ts) - len_tokenized_a)
 
         # 3) [CLS]
-        ts = [cls_token] + ts
-        tok_ps = [1] + tok_ps  # original tok_ps start from 2
-        tok_ss = [1.0] + tok_ss
-        tok_sc = [1.0] + tok_sc
-        tok_sps = [-1] + tok_sps
-        tok_ssi = [0] + tok_ssi
-        si = [cls_token_segment_id] + si
+        usr_token = "[USR]"
+        ts = [cls_token] + [usr_token] + ts
+        tok_ps = [1] + [1] + tok_ps  # original tok_ps start from 2
+        tok_ss = [1.0] + [1.0] + tok_ss
+        tok_sc = [1.0] + [1.0] + tok_sc
+        tok_sps = [-1] + [-1] + tok_sps
+        tok_ssi = [0] +  [0] + tok_ssi
+        si = [cls_token_segment_id] + [cls_token_segment_id] + si
 
+        print(ts)
         tokens.append(ts)
         position_ids.append(tok_ps)
         scores.append(tok_ss)
@@ -345,12 +511,15 @@ def prepare_inputs_for_bert_xlnet_one_seq(utterances, utt_lens, padded_utt_pos_i
 
     token_lens = [len(tokenized_text) for tokenized_text in tokens]
     max_length_of_tokens = max(token_lens)
-
+    
+    
     # padding
     padding_lengths = [max_length_of_tokens - len(tokenized_text) for tokenized_text in tokens]
+    
+    
     input_mask = [[1] * len(tokenized_text) + [0] * padding_lengths[idx] for idx,tokenized_text in enumerate(tokens)]
     indexed_tokens = [tokenizer.convert_tokens_to_ids(tokenized_text) + [pad_token] * padding_lengths[idx] for idx,tokenized_text in enumerate(tokens)]
-    padded_tok_positions = [p + [pad_pos] * padding_lengths[idx] for idx, p in enumerate(position_ids)]
+    padded_tok_positions = [p  +  [pad_pos] + [pad_pos] * padding_lengths[idx] for idx, p in enumerate(position_ids)]
     padded_tok_scores = [s + [pad_score] * padding_lengths[idx] for idx, s in enumerate(scores)]
     padded_tok_scores_scaler = [sc + [pad_score] * padding_lengths[idx] for idx, sc in enumerate(scores_scaler)]
     padded_tok_parents = [p + [pad_parent] * padding_lengths[idx] for idx, p in enumerate(sa_parents)]

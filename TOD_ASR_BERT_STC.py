@@ -21,9 +21,9 @@ sys.path.append(install_path)
 
 from utils.util import make_logger, get_exp_dir_bert
 from utils.fscore import update_f1, compute_f1
-from utils.dataset.wcn_systemAct import read_wcn_data, prepare_wcn_dataloader
+from utils.dataset.tod_asr_util import read_wcn_data, prepare_wcn_dataloader
 from utils.gpu_selection import auto_select_gpu
-from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq, prepare_inputs_for_bert_xlnet
+from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq, prepare_inputs_for_bert_xlnet,prepare_inputs_for_bert_xlnet_seq_base
 from utils.pos_util import get_sequential_pos
 from utils.mask_util import prepare_mask
 from utils.STC_util import convert_labels, reverse_top2bottom, onehot_to_scalar
@@ -210,16 +210,11 @@ def train_epoch(model, data, opt, memory):
 
     for step, batch in enumerate(data):
         # prepare data
-        batch_in, batch_pos, batch_score, \
-            batch_sa, batch_sa_parent, batch_sa_sib, batch_sa_type, \
-            batch_labels, raw_in, raw_sa, raw_labels = batch
-        lens_utt = [len(utt) + 1 for utt in raw_in]  # +1 due to [CLS]
-        lens_sysact = [len(seq) for seq in raw_sa]
-        raw_lens = [len(utt) for utt in raw_in]
+        batch_labels, raw_in, raw_labels = batch
 
         # prepare inputs for BERT/XLNET
         inputs = {}
-        if opt.with_system_act:
+        '''if opt.with_system_act:
             batch_sa_pos = get_sequential_pos(batch_sa)
             pretrained_inputs = prepare_inputs_for_bert_xlnet_one_seq(
                 raw_in, raw_lens, batch_pos, batch_score,
@@ -242,14 +237,15 @@ def train_epoch(model, data, opt, memory):
                 pad_on_left=False,
                 pad_token_segment_id=0,
                 device=opt.device
-            )
+            )'''
+        pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)    
 
 
         inputs['pretrained_inputs'] = pretrained_inputs
-        masks = prepare_mask(pretrained_inputs)
+        #masks = prepare_mask(pretrained_inputs)
 
         # forward
-        top_scores, bottom_scores_dict, batch_preds = model(inputs, masks)
+        top_scores, bottom_scores_dict, batch_preds = model(pretrained_inputs)
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)
@@ -306,16 +302,11 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
     for j, batch in enumerate(data):
         # prepare data
-        batch_in, batch_pos, batch_score, \
-            batch_sa, batch_sa_parent, batch_sa_sib, batch_sa_type, \
-            batch_labels, raw_in, raw_sa, raw_labels = batch
-        lens_utt = [len(utt) + 1 for utt in raw_in]  # +1 due to [CLS]
-        lens_sysact = [len(seq) for seq in raw_sa]
-        raw_lens = [len(utt) for utt in raw_in]
+        batch_labels, raw_in, raw_labels = batch
 
         # prepare inputs for BERT/XLNET
         inputs = {}
-        if opt.with_system_act:
+        '''if opt.with_system_act:
             batch_sa_pos = get_sequential_pos(batch_sa)
             pretrained_inputs = prepare_inputs_for_bert_xlnet_one_seq(
                 raw_in, raw_lens, batch_pos, batch_score,
@@ -338,14 +329,14 @@ def eval_epoch(model, data, opt, memory, fp, efp):
                 pad_on_left=False,
                 pad_token_segment_id=0,
                 device=opt.device
-            )
+            )'''
        
 
-        inputs['pretrained_inputs'] = pretrained_inputs
-        masks = prepare_mask(pretrained_inputs)
         
+        pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds = model(inputs, masks, return_attns=False)
+        top_scores, bottom_scores_dict, batch_preds = model(pretrained_inputs)
+        #top_scores, bottom_scores_dict, batch_preds = model(inputs, masks, return_attns=False)
         loss, _ = cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt)
         losses.append(loss)
 
