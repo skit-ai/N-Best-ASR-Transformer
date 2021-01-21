@@ -285,10 +285,10 @@ class TOD_ASR_Transformer_STC(nn.Module):
         #self.init_weight(opt.init_type, opt.init_range)
 
 
-    def forward(self, inputs, return_attns=False):
+    def forward(self, input_ids,seg_ids,return_attns=False):
 
         # encoder
-        outputs = self.bert_encoder(inputs,attention_mask=inputs>0)
+        outputs = self.bert_encoder(input_ids=input_ids,token_type_ids=seg_ids,attention_mask=input_ids>0)
         sequence_output = outputs[0]
         lin_in = sequence_output[:, 0, :]
 

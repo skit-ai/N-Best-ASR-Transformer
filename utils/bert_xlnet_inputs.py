@@ -996,32 +996,47 @@ def prepare_inputs_for_bert_xlnet_seq_ids(raw_in, tokenizer, device):
     '''
 
     bert_inputs = []
-    seg_ids = []   
-    for seq in raw_in:
-        sequence_a_segment_id=0
-        sequence_b_segment_id=1
-
-        tok_seq = []
+    seg_ids = []  
+    sequence_a_segment_id=0
+    sequence_b_segment_id=1 
+    for seq in raw_in:    
+        tok_seq_a = []
+        tok_seq_b = []
+        #get index of [USR] word as we would like to get the 
         usr_idx = seq.index("[USR]")
-        
+        seq_a = seq[:usr_idx]
+        seq_b = seq[usr_idx:]
 
-        tok_seq = []
-        for word in seq:
+        #tokenize words in seq_a
+        for word in seq_a:
             tok_word = tokenizer.tokenize(word)
-            tok_seq += tok_word
-        bert_inputs.append(tok_seq + [tokenizer.sep_token])
+            tok_seq_a += tok_word
 
-        si = [sequence_a_segment_id] * (len(seq) - int(usr_idx))
-        si += [sequence_b_segment_id] * (len(seq) -  int(usr_idx))
-        seg_ids.append(si)
+        #tokenize words in seq_b
+        for word in seq_b:
+            tok_word = tokenizer.tokenize(word)
+            tok_seq_b += tok_word
+        
+        #Add [SEP] token to end seq_b 
+        tok_seq_b = tok_seq_b + [tokenizer.sep_token]
+        tok_seq = tok_seq_a + tok_seq_b
+        bert_inputs.append(tok_seq)
+        seq_a_segments = [sequence_a_segment_id] * len(tok_seq_a)
+        seq_b_segments = [sequence_b_segment_id] * len(tok_seq_b) 
+        seg_ids.append(seq_a_segments + seq_b_segments)
         
     input_lens = [len(seq) for seq in bert_inputs]
     max_len = max(input_lens)
     
     bert_input_ids = [tokenizer.convert_tokens_to_ids(seq) + [tokenizer.pad_token_id] * (max_len - len(seq)) 
     for seq in bert_inputs]
+
+    seg_input_ids = [seg_id + [0] * (max_len - len(seg_id)) for seg_id in seg_ids] 
+
+    assert len(bert_input_ids[0]) == max_len
+    assert len(seg_input_ids[0]) == max_len    
     
     bert_input_ids = torch.tensor(bert_input_ids, dtype=torch.long, device=device)
-
+    seg_input_ids = torch.tensor(seg_input_ids, dtype=torch.long, device=device)
     
-    return bert_input_ids, input_lens
+    return bert_input_ids,seg_input_ids,input_lens
