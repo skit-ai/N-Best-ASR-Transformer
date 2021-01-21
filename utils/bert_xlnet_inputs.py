@@ -7,6 +7,76 @@ from helpers.act_slot_split_map import SPLIT_MAP
 '''
 largely borrowed from su.zhu
 '''
+def prepare_inputs_for_bert_xlnet_wcn_base(raw_in, tokenizer):
+
+    '''
+    @ input:
+    - raw_in: list of {list of [(id_1, s_1), (id_2, s_2), ...]}
+    @ output:
+    - bert_inputs: list of {list of [([tok_id1_1, tok_id1_2, ...], s_1), ...]}
+      only replace id_1 with [tok_id1_1, tok_id1_2]
+      NOTE: pad bins with (pad_id, 1.0)
+    '''
+
+    batch_size = len(raw_in)
+    lens = [len(item) for item in raw_in]
+    max_len = max(lens)
+
+    bert_inputs = []
+
+    for i in range(batch_size):
+        bin_inputs = []
+        inp = raw_in[i]
+        for word_bin in inp:
+            word_inputs = []
+            for word, score in word_bin:
+                tok_word = tokenizer.tokenize(word)
+                tok_word_id = [tokenizer._convert_token_to_id(t) for t in tok_word]
+                word_inputs.append((tok_word_id, score))
+            bin_inputs.append(word_inputs)
+        # padding
+        bin_inputs = bin_inputs + [[([tokenizer.pad_token_id], 1.0)]] * (max_len - len(bin_inputs))
+        bert_inputs.append(bin_inputs)
+
+    return bert_inputs
+
+
+
+
+def prepare_inputs_for_bert_xlnet_wcn_base(raw_in, tokenizer):
+
+    '''
+    @ input:
+    - raw_in: list of {list of [(id_1, s_1), (id_2, s_2), ...]}
+    @ output:
+    - bert_inputs: list of {list of [([tok_id1_1, tok_id1_2, ...], s_1), ...]}
+      only replace id_1 with [tok_id1_1, tok_id1_2]
+      NOTE: pad bins with (pad_id, 1.0)
+    '''
+
+    batch_size = len(raw_in)
+    lens = [len(item) for item in raw_in]
+    max_len = max(lens)
+
+    bert_inputs = []
+
+    for i in range(batch_size):
+        bin_inputs = []
+        inp = raw_in[i]
+        for word_bin in inp:
+            word_inputs = []
+            for word, score in word_bin:
+                tok_word = tokenizer.tokenize(word)
+                tok_word_id = [tokenizer._convert_token_to_id(t) for t in tok_word]
+                word_inputs.append((tok_word_id, score))
+            bin_inputs.append(word_inputs)
+        # padding
+        bin_inputs = bin_inputs + [[([tokenizer.pad_token_id], 1.0)]] * (max_len - len(bin_inputs))
+        bert_inputs.append(bin_inputs)
+
+    return bert_inputs
+
+
 
 def prepare_inputs_for_bert_xlnet(sentences, word_lengths, tokenizer, padded_position_ids, padded_scores=None,
         cls_token_at_end=False, pad_on_left=False, cls_token='[CLS]', sep_token='[SEP]',
@@ -883,6 +953,7 @@ def prepare_inputs_for_bert_xlnet_wcn_base(raw_in, tokenizer):
     return bert_inputs
 
 
+
 def prepare_inputs_for_bert_xlnet_seq_base(raw_in, tokenizer, device):
     '''
     @ input:
@@ -903,10 +974,54 @@ def prepare_inputs_for_bert_xlnet_seq_base(raw_in, tokenizer, device):
     input_lens = [len(seq) for seq in bert_inputs]
     max_len = max(input_lens)
 
-    bert_input_ids = [tokenizer.convert_tokens_to_ids(seq) + [tokenizer.pad_token_id] * (max_len - len(seq))
-        for seq in bert_inputs]
+    
+
+    bert_input_ids = [tokenizer.convert_tokens_to_ids(seq) + [tokenizer.pad_token_id] * (max_len - len(seq)) 
+    for seq in bert_inputs]
+    
+    
+
     bert_input_ids = torch.tensor(bert_input_ids, dtype=torch.long, device=device)
 
     return bert_input_ids, input_lens
 
 
+
+def prepare_inputs_for_bert_xlnet_seq_ids(raw_in, tokenizer, device):
+    '''
+    @ input:
+    - raw_in: list of strings
+    @ output:
+    - bert_inputs: padded Tensor
+    '''
+
+    bert_inputs = []
+    seg_ids = []   
+    for seq in raw_in:
+        sequence_a_segment_id=0
+        sequence_b_segment_id=1
+
+        tok_seq = []
+        usr_idx = seq.index("[USR]")
+        
+
+        tok_seq = []
+        for word in seq:
+            tok_word = tokenizer.tokenize(word)
+            tok_seq += tok_word
+        bert_inputs.append(tok_seq + [tokenizer.sep_token])
+
+        si = [sequence_a_segment_id] * (len(seq) - int(usr_idx))
+        si += [sequence_b_segment_id] * (len(seq) -  int(usr_idx))
+        seg_ids.append(si)
+        
+    input_lens = [len(seq) for seq in bert_inputs]
+    max_len = max(input_lens)
+    
+    bert_input_ids = [tokenizer.convert_tokens_to_ids(seq) + [tokenizer.pad_token_id] * (max_len - len(seq)) 
+    for seq in bert_inputs]
+    
+    bert_input_ids = torch.tensor(bert_input_ids, dtype=torch.long, device=device)
+
+    
+    return bert_input_ids, input_lens
