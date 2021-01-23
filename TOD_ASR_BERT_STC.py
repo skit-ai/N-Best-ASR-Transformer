@@ -13,7 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 
-from transformers import BertTokenizer, BertModel, get_linear_schedule_with_warmup
+from transformers import BertTokenizer, BertModel,RobertaTokenizer,XLMRobertaTokenizer, XLMRobertaModel, get_linear_schedule_with_warmup
 from transformers.optimization import AdamW
 from transformers import *
 install_path = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +23,7 @@ from utils.util import make_logger, get_exp_dir_bert
 from utils.fscore import update_f1, compute_f1
 from utils.dataset.tod_asr_util import read_wcn_data, prepare_wcn_dataloader
 from utils.gpu_selection import auto_select_gpu
-from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq, prepare_inputs_for_bert_xlnet,prepare_inputs_for_bert_xlnet_seq_base, prepare_inputs_for_bert_xlnet_seq_ids
+from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq, prepare_inputs_for_bert_xlnet,prepare_inputs_for_bert_xlnet_seq_base, prepare_inputs_for_bert_xlnet_seq_ids,prepare_inputs_for_roberta
 from utils.pos_util import get_sequential_pos
 from utils.mask_util import prepare_mask
 from utils.STC_util import convert_labels, reverse_top2bottom, onehot_to_scalar
@@ -239,9 +239,9 @@ def train_epoch(model, data, opt, memory):
                 device=opt.device
             )'''
          #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
-        input_ids,seg_ids,input_lens=prepare_inputs_for_bert_xlnet_seq_ids(raw_in,opt.tokenizer,device=opt.device)
+        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds = model(input_ids,seg_ids)
+        top_scores, bottom_scores_dict, batch_preds = model(input_ids)
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)
@@ -330,9 +330,9 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
         
         #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
-        input_ids,seg_ids,input_lens=prepare_inputs_for_bert_xlnet_seq_ids(raw_in,opt.tokenizer,device=opt.device)
+        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds = model(input_ids,seg_ids)
+        top_scores, bottom_scores_dict, batch_preds = model(input_ids)
         #top_scores, bottom_scores_dict, batch_preds = model(inputs, masks, return_attns=False)
         loss, _ = cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt)
         losses.append(loss)
@@ -371,7 +371,10 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
     mean_loss = np.mean(losses)
     p, r, f = compute_f1(TP, FP, FN)
-    acc = corr / tot * 100
+    try:
+        acc = corr / tot * 100
+    except:
+        acc = 0    
 
     # err_analysis(err_cases)
 
@@ -465,21 +468,11 @@ def test(model, train_dataloader, valid_dataloader, test_dataloader, opt, memory
 
 if __name__ == '__main__':
     opt = parse_arguments()
-
-    # pretrained model
-    #pretrained_model_class, tokenizer_class = BertModel, BertTokenizer
-    #opt.tokenizer = tokenizer_class.from_pretrained(opt.bert_model_name, do_lower_case=True)
-    '''opt.pretrained_model = pretrained_model_class.from_pretrained(
-        opt.bert_model_name,
-        output_hidden_states=opt.fix_bert_model
-    )'''
     print('Karthik is a good boy')
-    opt.tokenizer = AutoTokenizer.from_pretrained("tod-bert-models/ToD-BERT-jnt")
-    opt.pretrained_model = AutoModel.from_pretrained("tod-bert-models/ToD-BERT-jnt")
-    opt.tokenizer.add_special_tokens({'bos_token': Constants.BOS_WORD, 'eos_token': Constants.EOS_WORD})
-    opt.pretrained_model.resize_token_embeddings(len(opt.tokenizer))
-    # print(opt.pretrained_model.config)
-
+    #opt.tokenizer = AutoTokenizer.from_pretrained("tod-bert-models/ToD-BERT-jnt")
+    #opt.pretrained_model = AutoModel.from_pretrained("tod-bert-models/ToD-BERT-jnt")
+    opt.tokenizer = XLMRobertaTokenizer.from_pretrained('xlm-roberta-base')
+    opt.pretrained_model = XLMRobertaModel.from_pretrained('xlm-roberta-base')
     # memory
     memory = torch.load(os.path.join(opt.dataroot, 'memory.pt'))
     opt.word_vocab_size = opt.tokenizer.vocab_size  # subword-level

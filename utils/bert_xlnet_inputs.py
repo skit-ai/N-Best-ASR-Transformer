@@ -1040,3 +1040,46 @@ def prepare_inputs_for_bert_xlnet_seq_ids(raw_in, tokenizer, device):
     seg_input_ids = torch.tensor(seg_input_ids, dtype=torch.long, device=device)
     
     return bert_input_ids,seg_input_ids,input_lens
+
+def prepare_inputs_for_roberta(raw_in, tokenizer, device):
+    '''
+    @ input:
+    - raw_in: list of strings
+    @ output:
+    - bert_inputs: padded Tensor
+    '''
+
+    bert_inputs = []
+    seg_ids = []  
+    for seq in raw_in:    
+        tok_seq = []
+        #get index of [USR] word as we would like to get the 
+        usr_idx = seq.index("[USR]")
+        #Get the previous system response 
+        seq_a = seq[2:usr_idx]
+        #get user response 
+        seq_b = seq[usr_idx+1:]
+        seq = seq_a + ["[SEP]"] + seq_b
+
+        seq = [tokenizer.sep_token+tokenizer.sep_token if x=="[SEP]" else x for x in seq]
+        #tokenize words in seq_a
+        for word in seq:
+            tok_word = tokenizer.tokenize(word)
+            tok_seq  += tok_word    
+             
+        #Add [SEP] token to end seq_b
+        bert_inputs.append([tokenizer.cls_token] + tok_seq + [tokenizer.sep_token])
+        
+        
+    input_lens = [len(seq) for seq in bert_inputs]
+    max_len = max(input_lens)
+    
+    bert_input_ids = [tokenizer.convert_tokens_to_ids(seq) + [tokenizer.pad_token_id] * (max_len - len(seq)) 
+    for seq in bert_inputs]
+
+
+    assert len(bert_input_ids[0]) == max_len  
+    
+    bert_input_ids = torch.tensor(bert_input_ids, dtype=torch.long, device=device)
+    
+    return bert_input_ids,input_lens

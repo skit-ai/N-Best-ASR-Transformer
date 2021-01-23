@@ -170,7 +170,7 @@ def process_sys_acts(sys_acts):
     return token_seq, parent_idx_seq, sib_idx_seq, type_seq, memory
 
 
-def read_wcn_data_and_save(log_fn, label_fn, save_fp, bin_norm=False, rm_null=False):
+def read_wcn_data_and_save(log_fn, label_fn, save_fp, bin_norm=False, rm_null=False,augment=True,upsample_count=3):
     log_data = json.loads(open(log_fn).read())
     label_data = json.loads(open(label_fn).read())
     assert log_data['session-id'] == label_data['session-id']
@@ -206,7 +206,7 @@ def read_wcn_data_and_save(log_fn, label_fn, save_fp, bin_norm=False, rm_null=Fa
 
         # get batch 1best/nbest
         batch_nbest = turn['input']['batch']['asr-hyps']
-        batch_nbest = [term['asr-hyp'] for term in batch_nbest]
+        batch_nbest = [term['asr-hyp'] for term in batch_nbest if term['asr-hyp'].rstrip()!=""]
         batch_1best = batch_nbest[0]
 
         # get manual transcription
@@ -222,6 +222,9 @@ def read_wcn_data_and_save(log_fn, label_fn, save_fp, bin_norm=False, rm_null=Fa
         prev_sys_response = turn['output']['transcript']
 
         in_seq = '[CLS] [SYS] ' + prev_sys_response + ' [USR] ' + in_seq
+        
+        # input seq based on transcription seq 
+        transcription_in_seq = '[CLS] [SYS] ' + prev_sys_response + ' [USR] ' + manual
 
         seq_lens.append(len(in_seq.split(' ')))
 
@@ -240,6 +243,12 @@ def read_wcn_data_and_save(log_fn, label_fn, save_fp, bin_norm=False, rm_null=Fa
         # write sequence
         seq2write = '%s\t<=>\t%s\n' % (in_seq, labels_seq)
         save_fp.write(seq2write)
+
+        if augment:
+            seq2write = '%s\t<=>\t%s\n' % (transcription_in_seq, labels_seq)
+            for i in range(upsample_count):
+                save_fp.write(seq2write)
+        
 
     return word_list, label_set, sys_acts_memory
 
@@ -480,8 +489,11 @@ for mode in ['train', 'valid', 'test']:
         fn = os.path.join(data_dir, 'ori_data', fn)
         label_fn = os.path.join(fn, 'label.json')
         log_fn = os.path.join(fn, 'log.json')
+        augment = False
+        if mode in ['train','valid']:
+            augment = True
         word_list, label_set, sys_mem = read_wcn_data_and_save(
-            log_fn, label_fn, fps[mode], bin_norm=opt.bin_norm, rm_null=opt.rm_null
+            log_fn, label_fn, fps[mode], bin_norm=opt.bin_norm, rm_null=opt.rm_null,augment=augment
         )
         if mode == 'train':
             train_wcn_words += word_list
