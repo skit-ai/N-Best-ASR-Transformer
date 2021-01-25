@@ -285,12 +285,21 @@ class TOD_ASR_Transformer_STC(nn.Module):
         #self.init_weight(opt.init_type, opt.init_range)
 
 
-    def forward(self, input_ids,seg_ids=None,return_attns=False):
+    def forward(self,input_ids,trans_input_ids=None,seg_ids=None,return_attns=False):
 
-        # encoder
+        # encoder on asr out 
         outputs = self.bert_encoder(input_ids=input_ids,attention_mask=input_ids>0)
         sequence_output = outputs[0]
         lin_in = sequence_output[:, 0, :]
+
+        #encoder on manual transcription
+        trans_lin_in = None
+        if trans_input_ids is not None:
+            trans_outputs = self.bert_encoder(input_ids=trans_input_ids,attention_mask=trans_input_ids>0)
+            trans_sequence_output = trans_outputs[0]
+            trans_lin_in = trans_sequence_output[:, 0, :]
+
+
 
         # decoder / classifier
         if self.cls_type == 'nc':
@@ -332,9 +341,9 @@ class TOD_ASR_Transformer_STC(nn.Module):
             scores = (act_scores_out, slot_scores_out, value_scores_out)
 
         if return_attns:
-            return scores, attns
+            return top_scores, bottom_scores_dict, final_scores, attns,lin_in,trans_lin_in
         else:
-            return scores
+            return top_scores, bottom_scores_dict, final_scores,lin_in,trans_lin_in
 
     def decode_batch_tf_hd(self, inputs, masks, memory, device, tokenizer=None):
         '''
