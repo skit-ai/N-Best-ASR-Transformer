@@ -84,6 +84,10 @@ def parse_arguments():
     ######################## system act #########################
     parser.add_argument('--with_system_act', action='store_true', help='whether to include the last system act')
 
+    ####################### Loss function setting ###############
+
+    parser.add_argument('--add_l2_loss',type=bool,default=False , help='whether to add l2 loss between pure and asr transcripts')
+
     opt = parser.parse_args()
 
     ######################### option verification & adjustment #########################
@@ -138,13 +142,13 @@ def cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, me
     loss_record = 0.
     total_loss = 0.
 
-    # bottom-label BCE loss
-    if (asr_hidden_state is not None) and (transcription_hidden_state is not None):
+    # MSE loss 
+    if opt.add_l2_loss and (asr_hidden_state is not None) and (transcription_hidden_state is not None):
         mse_loss = opt.mse_loss_function(asr_hidden_state,transcription_hidden_state)
         loss_record += mse_loss.item() / batch_size
         total_loss += mse_loss
 
-
+    # bottom-label BCE loss
     bottom_loss_flag = True
     if bottom_loss_flag:
         bottom_loss = opt.class_loss_function(batch_preds, batch_labels)
@@ -220,30 +224,6 @@ def train_epoch(model, data, opt, memory):
 
         # prepare inputs for BERT/XLNET
         inputs = {}
-        '''if opt.with_system_act:
-            batch_sa_pos = get_sequential_pos(batch_sa)
-            pretrained_inputs = prepare_inputs_for_bert_xlnet_one_seq(
-                raw_in, raw_lens, batch_pos, batch_score,
-                raw_sa, lens_sysact, batch_sa_pos, batch_sa_parent, batch_sa_sib, batch_sa_type,
-                opt.tokenizer,
-                cls_token=opt.tokenizer.cls_token,
-                sep_token=opt.tokenizer.sep_token,
-                cls_token_segment_id=0,
-                pad_on_left=False,
-                pad_token_segment_id=0,
-                device=opt.device
-            )
-        else:
-            pretrained_inputs = prepare_inputs_for_bert_xlnet(
-                raw_in, raw_lens, opt.tokenizer, batch_pos, batch_score,
-                cls_token_at_end=False,
-                cls_token=opt.tokenizer.cls_token,
-                sep_token=opt.tokenizer.sep_token,
-                cls_token_segment_id=0,
-                pad_on_left=False,
-                pad_token_segment_id=0,
-                device=opt.device
-            )'''
          #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
         input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
         trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,device=opt.device)
@@ -309,31 +289,6 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
         # prepare inputs for BERT/XLNET
         inputs = {}
-        '''if opt.with_system_act:
-            batch_sa_pos = get_sequential_pos(batch_sa)
-            pretrained_inputs = prepare_inputs_for_bert_xlnet_one_seq(
-                raw_in, raw_lens, batch_pos, batch_score,
-                raw_sa, lens_sysact, batch_sa_pos, batch_sa_parent, batch_sa_sib, batch_sa_type,
-                opt.tokenizer,
-                cls_token=opt.tokenizer.cls_token,
-                sep_token=opt.tokenizer.sep_token,
-                cls_token_segment_id=0,
-                pad_on_left=False,
-                pad_token_segment_id=0,
-                device=opt.device
-            )
-        else:
-            pretrained_inputs = prepare_inputs_for_bert_xlnet(
-                raw_in, raw_lens, opt.tokenizer, batch_pos, batch_score,
-                cls_token_at_end=False,
-                cls_token=opt.tokenizer.cls_token,
-                sep_token=opt.tokenizer.sep_token,
-                cls_token_segment_id=0,
-                pad_on_left=False,
-                pad_token_segment_id=0,
-                device=opt.device
-            )'''
-       
         input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
         trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,device=opt.device)
         # forward

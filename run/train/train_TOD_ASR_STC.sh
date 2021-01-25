@@ -38,6 +38,10 @@ seed=999
 
 #################### cmd ####################
 
+################### loss function ###########
+
+add_l2_loss = false
+
 python3 TOD_ASR_BERT_STC.py \
     --dataset ${dataset} --dataroot ${dataroot} \
     --bert_model_name ${bert_model_name} ${fix_bert_model:+--fix_bert_model} \
