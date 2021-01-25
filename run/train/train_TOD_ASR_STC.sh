@@ -12,8 +12,8 @@ cls_type='stc'
 
 #################### data & vocab dirs ####################
 dataset="dstc2"
-dataroot="dstc2_data/augmented_roberta_data/processed_data/raw"
-exp_path="exp/exp_TOD_STC_Augmented_ROBERT/"
+dataroot="dstc2_data/transcription_added_data/processed_data/raw"
+exp_path="exp/exp_ASR_Transcription_XLM_ROBERT/"
 
 #################### pretrained embedding ####################
 fix_bert_model=false

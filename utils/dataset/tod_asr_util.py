@@ -1,17 +1,17 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-
 import utils.Constants as Constants
 
 
-def read_wcn_data(fn):
+def read_wcn_data(fn,coverage=None,upsample_count=None):
     '''
     * fn: wcn data file name
     * line format - word:parent:sibling:type ... \t<=>\tword:pos:score word:pos:score ... \t<=>\tlabel1;label2...
     * system act <=> utterance <=> labels
     '''
-    in_seqs = []
+    asr_in_seqs = []
+    trans_in_seqs = []
     pos_seqs = []
     score_seqs = []
     sa_seqs = []
@@ -22,15 +22,33 @@ def read_wcn_data(fn):
     with open(fn, 'r') as fp:
         lines = fp.readlines()
         for line in lines:
-            inp, lbl = line.strip('\n\r').split('\t<=>\t')
-            inp_list = inp.strip().split(' ')
-            in_seqs.append(inp_list)
+            asr_inp,trans_inp,lbl = line.strip('\n\r').split('\t<=>\t')
+            asr_inp_list = asr_inp.strip().split(' ')
+            trans_inp_list = trans_inp.strip().split(' ')
+            asr_in_seqs.append(asr_inp_list)
+            trans_in_seqs.append(trans_inp_list)
             if len(lbl) == 0:
                 labels.append([])
             else:
                 labels.append(lbl.strip().split(';'))
 
-    return in_seqs, labels
+    # stratified split 
+    '''asr_in_seqs,trans_in_seqs,labels , _ = train_test_split((asr_in_seqs,trans_in_seqs,labels),
+                                                test_size=(1-coverage/100),
+                                                shuffle=True,
+                                                stratify=dataset.__repr__)
+    augmented_asr_in_seqs = []
+    augmented_trans_in_seqs = []
+    augmented_labels = []                                            
+    if upsample_count:
+        
+        for asr_in_seq,trans_in_seq,label in zip(asr_in_seqs,asr_in_seqs,labels):
+            for _ in range(upsample_count):
+                augmented_asr_in_seqs.append(trans_in_seq)
+                augmented_trans_in_seqs.append(trans_in_seq)
+                augmented_labels.append(label)'''
+    
+    return asr_in_seqs,trans_in_seqs,labels
 
 
 def prepare_wcn_dataloader(data, memory, batch_size, max_seq_len, device, shuffle_flag=False):
@@ -42,7 +60,6 @@ def prepare_wcn_dataloader(data, memory, batch_size, max_seq_len, device, shuffl
         collate_fn=lambda batch, memory=memory, maxsl=max_seq_len, device=device: \
             collate_fn(batch, memory, max_seq_len, device)
     )
-
     return dataloader
 
 
@@ -59,7 +76,7 @@ def collate_fn(batch, memory, maxsl, device):
 
     # cut seq that is too long
 
-    in_seqs, label_lists = zip(*batch)
+    in_seqs,trans_in_seqs,label_lists = zip(*batch)
 
     max_len = max(len(item[0]) for item in batch)
 
@@ -92,21 +109,22 @@ def collate_fn(batch, memory, maxsl, device):
     batch_in = torch.LongTensor(batch_in).to(device)
     batch_labels = labels_map.float().to(device)
 
-    return batch_labels,list(in_seqs), list(label_lists)
+    return batch_labels,list(in_seqs),list(trans_in_seqs),list(label_lists)
 
 
 class WCN_Dataset(Dataset):
     def __init__(self, data):
         super(WCN_Dataset, self).__init__()
-        self.in_seqs, self.labels = data
+        self.in_seqs,self.trans_in_seqs,self.labels = data
 
     def __len__(self):
         return len(self.in_seqs)
 
     def __getitem__(self, index):
         in_seq = self.in_seqs[index]
+        trans_in_seq = self.trans_in_seqs[index]
         label = self.labels[index]
-        return in_seq,label
+        return in_seq,trans_in_seq,label
 
 
 

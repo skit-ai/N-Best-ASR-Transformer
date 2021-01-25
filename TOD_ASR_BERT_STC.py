@@ -70,7 +70,7 @@ def parse_arguments():
     parser.add_argument('--l2', type=float, default=0, help='weight decay')
     parser.add_argument('--dropout', type=float, default=0., help='dropout rate at each non-recurrent layer')
     parser.add_argument('--bert_dropout', type=float, default=0.1, help='dropout rate for BERT')
-    parser.add_argument('--batchSize', type=int, default=32, help='training batch size')
+    parser.add_argument('--batchSize', type=int, default=16, help='training batch size')
     parser.add_argument('--max_norm', type=float, default=5.0, help='threshold of gradient clipping (2-norm)')
     parser.add_argument('--max_epoch', type=int, default=50, help='max number of epochs to train')
     parser.add_argument('--experiment', default='exp', help='experiment directories for storing models and logs')
@@ -132,13 +132,19 @@ def cal_ce_loss(bottom_scores_dict, batch_labels, top2bottom_dict, opt):
     return sum(ce_losses) / len(ce_losses)
 
 
-def cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt):
+def cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt,asr_hidden_state=None,transcription_hidden_state=None):
     batch_size= top_scores.size(0)
 
     loss_record = 0.
     total_loss = 0.
 
     # bottom-label BCE loss
+    if (asr_hidden_state is not None) and (transcription_hidden_state is not None):
+        mse_loss = opt.mse_loss_function(asr_hidden_state,transcription_hidden_state)
+        loss_record += mse_loss.item() / batch_size
+        total_loss += mse_loss
+
+
     bottom_loss_flag = True
     if bottom_loss_flag:
         bottom_loss = opt.class_loss_function(batch_preds, batch_labels)
@@ -210,7 +216,7 @@ def train_epoch(model, data, opt, memory):
 
     for step, batch in enumerate(data):
         # prepare data
-        batch_labels, raw_in, raw_labels = batch
+        batch_labels,raw_in,raw_trans_in,raw_labels = batch
 
         # prepare inputs for BERT/XLNET
         inputs = {}
@@ -240,15 +246,16 @@ def train_epoch(model, data, opt, memory):
             )'''
          #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
         input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
+        trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds = model(input_ids)
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids)
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)
         #        in which 'i' is the index of top-label
 
         # backward
-        loss_record, total_loss = cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt)
+        loss_record, total_loss = cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt,asr_hidden_rep,trans_hidden_rep)
         losses.append(loss_record)
         total_loss.backward()
 
@@ -298,7 +305,7 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
     for j, batch in enumerate(data):
         # prepare data
-        batch_labels, raw_in, raw_labels = batch
+        batch_labels,raw_in,raw_trans_in,raw_labels = batch
 
         # prepare inputs for BERT/XLNET
         inputs = {}
@@ -327,12 +334,11 @@ def eval_epoch(model, data, opt, memory, fp, efp):
                 device=opt.device
             )'''
        
-
-        
-        #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
         input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
+        trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds = model(input_ids)
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids)
+        
         #top_scores, bottom_scores_dict, batch_preds = model(inputs, masks, return_attns=False)
         loss, _ = cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt)
         losses.append(loss)
@@ -559,6 +565,7 @@ if __name__ == '__main__':
     # loss function
     opt.class_loss_function = nn.BCELoss(reduction='sum')
     opt.ce_loss_function = nn.NLLLoss(reduction='sum')
+    opt.mse_loss_function = nn.MSELoss()
 
     # training or testing
     if opt.testing:
