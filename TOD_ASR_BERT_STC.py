@@ -21,7 +21,7 @@ sys.path.append(install_path)
 
 from utils.util import make_logger, get_exp_dir_bert
 from utils.fscore import update_f1, compute_f1
-from utils.dataset.tod_asr_util import read_wcn_data, prepare_wcn_dataloader
+from utils.dataset.tod_asr_util import read_wcn_data, prepare_wcn_dataloader, observability_lens, EpochInfoCollector
 from utils.gpu_selection import auto_select_gpu
 from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq, prepare_inputs_for_bert_xlnet,prepare_inputs_for_bert_xlnet_seq_base, prepare_inputs_for_bert_xlnet_seq_ids,prepare_inputs_for_roberta
 from utils.pos_util import get_sequential_pos
@@ -275,6 +275,12 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
     model.eval()
 
+    # sake of observability
+    raw_inputs = []
+    whole_pred_classes = []
+    true_golds = []
+    matches = []
+
     TP, FP, FN = 0, 0, 0
     corr, tot = 0, 0
     losses = []
@@ -330,6 +336,12 @@ def eval_epoch(model, data, opt, memory, fp, efp):
                 err_cases.append((raw, pred_classes, gold))
             all_cases.append((raw, pred_classes, gold))
 
+            # noting inputs, labels and predictions
+            raw_inputs.append(" ".join(raw))
+            whole_pred_classes.append(pred_classes)
+            true_golds.append(gold)
+            matches.append(True if set(pred_classes) == set(gold) else False)
+
     mean_loss = np.mean(losses)
     p, r, f = compute_f1(TP, FP, FN)
     try:
@@ -339,10 +351,14 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
     # err_analysis(err_cases)
 
+    # collecting overall useful values
+    eic = EpochInfoCollector(raw_inputs, whole_pred_classes, true_golds, matches, mean_loss, p, r, f, acc)
+
+
     if opt.testing:
-        return mean_loss, (p, r, f), acc, all_cases
+        return mean_loss, (p, r, f), acc, all_cases, eic
     else:
-        return mean_loss, (p, r, f), acc
+        return mean_loss, (p, r, f), acc, eic
 
 
 def train(model, train_dataloader, valid_dataloader, test_dataloader, opt, memory):
@@ -351,6 +367,7 @@ def train(model, train_dataloader, valid_dataloader, test_dataloader, opt, memor
     logger = make_logger(os.path.join(opt.exp_dir, 'log.train'))
     t0 = time.time()
     logger.info('Training starts at %s' % (time.asctime(time.localtime(time.time()))))
+    export_csv_model_name = "tod_asr_bert_stc"
 
     best = {'epoch': 0, 'vf': 0., 'tef': 0.}
 
@@ -365,17 +382,19 @@ def train(model, train_dataloader, valid_dataloader, test_dataloader, opt, memor
         with open(os.path.join(opt.exp_dir, 'valid.iter%d'%i), 'w') as fp, \
                 open(os.path.join(opt.exp_dir, 'valid.iter%d.err'%i), 'w') as efp:
             start = time.time()
-            valid_loss, (vp, vr, vf), v_acc = eval_epoch(model, valid_dataloader, opt, memory, fp, efp)
+            valid_loss, (vp, vr, vf), v_acc, v_eic = eval_epoch(model, valid_dataloader, opt, memory, fp, efp)
             logger.info('[Valid]\tEpoch: %02d\tTime: %.2f\tLoss: %.2f\t(p/r/f): (%.2f/%.2f/%.2f)\tAcc: %.2f' %
                 (i, time.time()-start, valid_loss, vp, vr, vf, v_acc))
+            observability_lens(v_eic, i, "valid", opt.exp_dir, export_csv_model_name)
 
         # evaluating test set
         with open(os.path.join(opt.exp_dir, 'test.iter%d'%i), 'w') as fp, \
                 open(os.path.join(opt.exp_dir, 'test.iter%d.err'%i), 'w') as efp:
             start = time.time()
-            test_loss, (tep, ter, tef), te_acc = eval_epoch(model, test_dataloader, opt, memory, fp, efp)
+            test_loss, (tep, ter, tef), te_acc, te_eic = eval_epoch(model, test_dataloader, opt, memory, fp, efp)
             logger.info('[Test]\tEpoch: %02d\tTime: %.2f\tLoss: %.2f\t(p/r/f): (%.2f/%.2f/%.2f)\tAcc: %.2f' %
                 (i, time.time()-start, test_loss, tep, ter, tef, te_acc))
+            observability_lens(te_eic, i, "test", opt.exp_dir, export_csv_model_name)
 
         # save model
         if vf > best['vf']:
