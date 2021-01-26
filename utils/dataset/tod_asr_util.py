@@ -3,6 +3,7 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pandas as pd
 
+import os
 import utils.Constants as Constants
 
 
@@ -132,7 +133,7 @@ class WCN_Dataset(Dataset):
 
 def observability_lens(eic, epoch, dataset_type, output_dir, extra_name):
 
-    total_length = len(raw_inputs)
+    total_length = len(eic.raw_inputs)
     epochs_list = [epoch]*total_length
     dataset_type_list = [dataset_type]*total_length
     mean_loss_list = [eic.mean_loss]*total_length
@@ -142,23 +143,24 @@ def observability_lens(eic, epoch, dataset_type, output_dir, extra_name):
     acc_list = [eic.acc]*total_length
 
     epoch_df = pd.DataFrame(
-        list(zip(epochs_list, dataset_type_list, mean_loss_list, precision_list, recall_list, f1_list, acc_list, eic.raw_inputs, eic.whole_pred_classes, eic.true_golds)),
-        columns=["epoch", "dataset", "mean_loss", "precision", "recall", "f1", "acc", "raw_inputs", "pred_classes", "gold"]
+        list(zip(epochs_list, dataset_type_list, mean_loss_list, precision_list, recall_list, f1_list, acc_list, eic.raw_inputs, eic.whole_pred_classes, eic.true_golds, eic.matches)),
+        columns=["epoch", "dataset", "mean_loss", "precision", "recall", "f1", "acc", "raw_inputs", "pred_classes", "gold", "matches"]
         )
 
-    epoch_df.to_csv(os.path.join(output_dir, f"epoch_{epoch}_observe_{extra_name}.csv"), index=False)
+    epoch_df.to_csv(os.path.join(output_dir, f"epoch_{epoch}_for_{dataset_type}_observe_{extra_name}.csv"), index=False)
 
 
 class EpochInfoCollector:
 
     def __init__(
         self, 
-        raw_inputs, whole_pred_classes, true_golds,
+        raw_inputs, whole_pred_classes, true_golds, matches,
         mean_loss, precision, recall, f1, acc
         ):
         self.raw_inputs = raw_inputs
         self.whole_pred_classes = whole_pred_classes
-        self.true_golds = true_golds 
+        self.true_golds = true_golds
+        self.matches = matches
         self.mean_loss = mean_loss
         self.precision = precision
         self.recall = recall

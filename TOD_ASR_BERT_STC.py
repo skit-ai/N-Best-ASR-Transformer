@@ -279,6 +279,7 @@ def eval_epoch(model, data, opt, memory, fp, efp):
     raw_inputs = []
     whole_pred_classes = []
     true_golds = []
+    matches = []
 
     TP, FP, FN = 0, 0, 0
     corr, tot = 0, 0
@@ -336,9 +337,10 @@ def eval_epoch(model, data, opt, memory, fp, efp):
             all_cases.append((raw, pred_classes, gold))
 
             # noting inputs, labels and predictions
-            raw_inputs.append(raw)
+            raw_inputs.append(" ".join(raw))
             whole_pred_classes.append(pred_classes)
             true_golds.append(gold)
+            matches.append(True if set(pred_classes) == set(gold) else False)
 
     mean_loss = np.mean(losses)
     p, r, f = compute_f1(TP, FP, FN)
@@ -350,7 +352,7 @@ def eval_epoch(model, data, opt, memory, fp, efp):
     # err_analysis(err_cases)
 
     # collecting overall useful values
-    eic = EpochInfoCollector(raw_inputs, whole_pred_classes, true_golds, mean_loss, p, r, f, acc)
+    eic = EpochInfoCollector(raw_inputs, whole_pred_classes, true_golds, matches, mean_loss, p, r, f, acc)
 
 
     if opt.testing:

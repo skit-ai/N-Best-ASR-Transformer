@@ -40,7 +40,7 @@ seed=999
 
 ################### loss function ###########
 
-add_l2_loss = false
+add_l2_loss=false
 
 python3 TOD_ASR_BERT_STC.py \
     --dataset ${dataset} --dataroot ${dataroot} \
