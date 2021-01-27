@@ -2,6 +2,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pandas as pd
+from sklearn.metrics import precision_recall_fscore_support
+from tabulate import tabulate
 
 import os
 import utils.Constants as Constants
@@ -130,6 +132,57 @@ class WCN_Dataset(Dataset):
         return in_seq,trans_in_seq,label
 
 
+def classification_report(df):
+    """
+    assuming no duplicates in the gold and prediction
+    also skipping out values where it exists in prediction and not in ground truth (hierarchial)
+    """
+    
+    unique_ground_truths = df["gold"].explode().unique()
+    set_ground_truths = set(unique_ground_truths)
+    
+    y_true_labels = {label: [] for label in set_ground_truths}
+    y_pred_labels = {label: [] for label in set_ground_truths}
+    
+    for idx, row in df.iterrows():
+        
+        set_gold = set(row["gold"])
+        set_pred = set(row["pred_classes"])
+        
+        for label in set_gold:
+            if label in set_pred:
+                y_true_labels[label].append(1)
+                y_pred_labels[label].append(1)
+            else:
+                y_true_labels[label].append(1)
+                y_pred_labels[label].append(0)
+        
+        
+        for label in ((set_pred - set_gold) & set_ground_truths):
+            y_true_labels[label].append(0)
+            y_pred_labels[label].append(1)
+            
+    metrics_accrued = {}
+    
+    for label in set_ground_truths:
+        
+        precision, recall, fscore, _ = precision_recall_fscore_support(
+            y_true_labels[label], y_pred_labels[label], average="binary", zero_division=0
+        )
+                
+        support = y_true_labels[label].count(1)
+        
+        metrics_accrued[label] = (round(precision, 2), round(recall, 2), round(fscore, 2), support)
+            
+    # only python 3.7+
+    metrics_accrued = dict(sorted(metrics_accrued.items()))
+
+    table = [[label, precision, recall, fscore, support] for label,(precision, recall, fscore, support) in metrics_accrued.items()]
+    headers = ["label", "precision", "recall", "f1-score", "support"]
+
+    return tabulate(table, headers)
+
+
 
 def observability_lens(eic, epoch, dataset_type, output_dir, extra_name):
 
@@ -148,6 +201,11 @@ def observability_lens(eic, epoch, dataset_type, output_dir, extra_name):
         )
 
     epoch_df.to_csv(os.path.join(output_dir, f"epoch_{epoch}_for_{dataset_type}_observe_{extra_name}.csv"), index=False)
+
+    metrics_string = classification_report(epoch_df)
+
+    with open(os.path.join(output_dir, f"classification_report_epoch_{epoch}_for_{dataset_type}.txt"), "w") as fp:
+        fp.write(metrics_string)
 
 
 class EpochInfoCollector:
