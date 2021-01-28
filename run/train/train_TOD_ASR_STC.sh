@@ -39,7 +39,7 @@ seed=999
 #################### cmd ####################
 
 ################### loss function ###########
-add_l2_loss=true
+add_l2_loss=false
 
 ################## pre - trained mode ########
 
