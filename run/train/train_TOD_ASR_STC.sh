@@ -43,11 +43,11 @@ add_l2_loss=false
 
 ################## pre - trained mode ########
 #pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta
-pre_trained_model = 'xlm-roberta'
+pre_trained_model='xlm-roberta'
 
 #pass the checkpoint path to tod pre-trained model if you want to use model 
 #NOTE : You need to pass this value parameter to --tod_pre_trained_model if you wish you use this model. 
-tod_pre_trained_model = 'tod-bert-models/ToD-BERT-jnt'
+tod_pre_trained_model='tod-bert-models/ToD-BERT-jnt'
 
 python3 TOD_ASR_BERT_STC.py \
     --dataset ${dataset} --dataroot ${dataroot} \
@@ -57,6 +57,6 @@ python3 TOD_ASR_BERT_STC.py \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
     --experiment ${exp_path} \
-    --add_l2_loss ${add_l2_loss}
+    --add_l2_loss ${add_l2_loss} \
     --pre_trained_model ${pre_trained_model}
     #--tod_pre_trained_model ${pre_trained_model} Uncomment this if you wish to tod-bert  

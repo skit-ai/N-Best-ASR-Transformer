@@ -238,10 +238,10 @@ def train_epoch(model, data, opt, memory):
         # prepare inputs for BERT/XLNET
         inputs = {}
          #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
-        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device,opt)
-        trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,device=opt.device)
+        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,opt,device=opt.device)
+        trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,opt,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,classifier_input_type="transcript")
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,classifier_input_type="asr")
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)
@@ -308,8 +308,8 @@ def eval_epoch(model, data, opt, memory, fp, efp):
 
         # prepare inputs for BERT/XLNET
         inputs = {}
-        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
-        trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,device=opt.device)
+        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,opt,device=opt.device)
+        trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,opt,device=opt.device)
         # forward
         top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids)
         
@@ -469,8 +469,8 @@ if __name__ == '__main__':
     else:
         if MODEL_CLASSES.get(opt.pre_trained_model):
             pre_trained_model,pre_trained_tokenizer,model_name = MODEL_CLASSES.get(opt.pre_trained_model) 
-            opt.tokenizer = pre_trained_model.from_pretrained(model_name)
-            opt.pretrained_model = pre_trained_tokenizer.get(opt.pre_trained_model).from_pretrained(model_name)
+            opt.pretrained_model = pre_trained_model.from_pretrained(model_name)
+            opt.tokenizer = pre_trained_tokenizer.from_pretrained(model_name)
     # memory
     memory = torch.load(os.path.join(opt.dataroot, 'memory.pt'))
     opt.word_vocab_size = opt.tokenizer.vocab_size  # subword-level
