@@ -56,5 +56,4 @@ python3 TOD_ASR_BERT_STC.py \
     --experiment ${exp_path} \
     --add_l2_loss ${add_l2_loss}
     --pre_trained_model ${pre_trained_model}
-    --tod_pre_trained_model ${tod_pre_trained_model}
 
