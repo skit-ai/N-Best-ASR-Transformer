@@ -13,7 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 
-from transformers import BertTokenizer, BertModel,RobertaTokenizer,XLMRobertaTokenizer, XLMRobertaModel, get_linear_schedule_with_warmup
+from transformers import BertTokenizer,BertModel,RobertaTokenizer,RobertaModel,XLMRobertaTokenizer, XLMRobertaModel, get_linear_schedule_with_warmup
 from transformers.optimization import AdamW
 from transformers import *
 install_path = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +31,12 @@ from models.model import make_model
 from models.optimization import BertAdam
 import utils.Constants as Constants
 
+
+MODEL_CLASSES = {
+    "bert": (BertModel,BertTokenizer,'bert-base-uncased'),
+    "roberta": (RobertaModel,RobertaTokenizer,'roberta-base'),
+    "xlm-roberta": (XLMRobertaModel,XLMRobertaTokenizer,'xlm-roberta-base'),
+}
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -88,8 +94,14 @@ def parse_arguments():
 
     parser.add_argument('--add_l2_loss',type=bool,default=False , help='whether to add l2 loss between pure and asr transcripts')
 
-    opt = parser.parse_args()
+    ###################### Pre-trained model config ##########################
 
+
+    parser.add_argument('--pre_trained_model',help = 'pre-trained model name to use among bert,roberta,xlm-roberta')
+    parser.add_argument('--tod_pre_trained_model',help = 'tod_pre_trained model checkpoint path')
+
+    opt = parser.parse_args()
+    
     ######################### option verification & adjustment #########################
     # device definition
     if opt.deviceId >= 0:
@@ -146,6 +158,7 @@ def cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, me
     if opt.add_l2_loss and (asr_hidden_state is not None) and (transcription_hidden_state is not None):
         mse_loss = opt.mse_loss_function(asr_hidden_state,transcription_hidden_state)
         loss_record += mse_loss.item() / batch_size
+        print("MSE loss",mse_loss.item())
         total_loss += mse_loss
 
     # bottom-label BCE loss
@@ -225,10 +238,10 @@ def train_epoch(model, data, opt, memory):
         # prepare inputs for BERT/XLNET
         inputs = {}
          #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
-        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device)
+        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,device=opt.device,opt)
         trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids)
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,classifier_input_type="transcript")
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)
@@ -428,12 +441,17 @@ def test(model, train_dataloader, valid_dataloader, test_dataloader, opt, memory
 
 
 if __name__ == '__main__':
+    #tod-bert-models/ToD-BERT-jnt
     opt = parse_arguments()
     print('Karthik is a good boy')
-    #opt.tokenizer = AutoTokenizer.from_pretrained("tod-bert-models/ToD-BERT-jnt")
-    #opt.pretrained_model = AutoModel.from_pretrained("tod-bert-models/ToD-BERT-jnt")
-    opt.tokenizer = XLMRobertaTokenizer.from_pretrained('xlm-roberta-base')
-    opt.pretrained_model = XLMRobertaModel.from_pretrained('xlm-roberta-base')
+    if opt.tod_pre_trained_model:
+        opt.tokenizer = AutoTokenizer.from_pretrained(opt.custom_pre_trained_model)
+        opt.pretrained_model = AutoModel.from_pretrained(opt.custom_pre_trained_model)
+    else:
+        if MODEL_CLASSES.get(opt.pre_trained_model):
+            pre_trained_model,pre_trained_tokenizer,model_name = MODEL_CLASSES.get(opt.pre_trained_model) 
+            opt.tokenizer = pre_trained_model.from_pretrained(model_name)
+            opt.pretrained_model = pre_trained_tokenizer.get(opt.pre_trained_model).from_pretrained(model_name)
     # memory
     memory = torch.load(os.path.join(opt.dataroot, 'memory.pt'))
     opt.word_vocab_size = opt.tokenizer.vocab_size  # subword-level

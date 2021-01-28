@@ -13,7 +13,7 @@ cls_type='stc'
 #################### data & vocab dirs ####################
 dataset="dstc2"
 dataroot="dstc2_data/transcription_added_data/processed_data/raw"
-exp_path="exp/exp_ASR_Transcription_XLM_ROBERT/"
+exp_path="exp/exp_Transcript_L2_XLM_ROBERT/"
 
 #################### pretrained embedding ####################
 fix_bert_model=false
@@ -39,8 +39,12 @@ seed=999
 #################### cmd ####################
 
 ################### loss function ###########
+add_l2_loss=true
 
-add_l2_loss = false
+################## pre - trained mode ########
+
+pre_trained_model = 'xlm-roberta'
+tod_pre_trained_model = 'tod-bert-models/ToD-BERT-jnt'
 
 python3 TOD_ASR_BERT_STC.py \
     --dataset ${dataset} --dataroot ${dataroot} \
@@ -49,5 +53,8 @@ python3 TOD_ASR_BERT_STC.py \
     --optim_choice ${optim} --lr ${lr} --bert_lr ${bert_lr} --warmup_proportion ${wp} \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
-    --experiment ${exp_path}
+    --experiment ${exp_path} \
+    --add_l2_loss ${add_l2_loss}
+    --pre_trained_model ${pre_trained_model}
+    --tod_pre_trained_model ${tod_pre_trained_model}
 

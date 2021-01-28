@@ -1041,7 +1041,7 @@ def prepare_inputs_for_bert_xlnet_seq_ids(raw_in, tokenizer, device):
     
     return bert_input_ids,seg_input_ids,input_lens
 
-def prepare_inputs_for_roberta(raw_in, tokenizer, device):
+def prepare_inputs_for_roberta(raw_in, tokenizer, device,opt):
     '''
     @ input:
     - raw_in: list of strings
@@ -1059,9 +1059,16 @@ def prepare_inputs_for_roberta(raw_in, tokenizer, device):
         seq_a = seq[2:usr_idx]
         #get user response 
         seq_b = seq[usr_idx+1:]
-        seq = seq_a + ["[SEP]"] + seq_b
 
-        seq = [tokenizer.sep_token+tokenizer.sep_token if x=="[SEP]" else x for x in seq]
+        if opt.tod_pre_trained_model:
+            seq = ["[SYS]"] + seq_a + ["[USR]"] + seq_b  
+        else:    
+            seq = seq_a + ["[SEP]"] + seq_b
+        
+        if opt.pre_trained_model and opt.pre_trained_model=="xlm-roberta":
+            seq = [tokenizer.sep_token+tokenizer.sep_token if x=="[SEP]" else x for x in seq]
+        else:
+            seq = [tokenizer.sep_token if x=="[SEP]" else x for x in seq]    
         #tokenize words in seq_a
         for word in seq:
             tok_word = tokenizer.tokenize(word)
