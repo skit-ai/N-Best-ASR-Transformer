@@ -9,6 +9,91 @@ import os
 import utils.Constants as Constants
 
 
+def _get_stratified_sampled_data(asr_in_seqs,trans_in_seqs,labels,coverage):
+    data = pd.DataFrame({"asr_in_seqs":asr_in_seqs,
+                        "trans_in_seqs":trans_in_seqs,
+                        "labels":labels})
+    total_sample_count = data.shape[0]
+
+    data["labels_tuple"] = data.labels.apply(lambda x: tuple(x))   
+    unique_data = data.drop_duplicates(subset=['labels_tuple'], keep='first')
+
+    
+    unique_sample_count = unique_data.shape[0]
+
+    print("coverage",coverage)
+    print("total_sample_count",total_sample_count)
+    print("unique_sample_count",unique_sample_count)
+    
+    rem_sample_count = int(np.round(abs((float(coverage)*total_sample_count) - unique_sample_count)))
+    data = data[~data.isin(unique_data)].dropna()
+
+    print("rem_sample_count",rem_sample_count)
+    
+    rem_data = data.sample(n = rem_sample_count, random_state = 42).reset_index(drop=True)
+    
+    sampled_data = pd.concat([unique_data, rem_data], ignore_index=True)
+
+    
+    print("sampled_data",sampled_data.shape)
+    return sampled_data
+    
+
+
+def read_wcn_train_data(fn,coverage=None,upsample_count=None):
+    '''
+    * fn: wcn data file name
+    * line format - word:parent:sibling:type ... \t<=>\tword:pos:score word:pos:score ... \t<=>\tlabel1;label2...
+    * system act <=> utterance <=> labels
+    '''
+    asr_in_seqs = []
+    trans_in_seqs = []
+    pos_seqs = []
+    score_seqs = []
+    sa_seqs = []
+    sa_parent_seqs = []
+    sa_sib_seqs = []
+    sa_type_seqs = []
+    labels = []
+    with open(fn, 'r') as fp:
+        lines = fp.readlines()
+        for line in lines:
+            asr_inp,trans_inp,lbl = line.strip('\n\r').split('\t<=>\t')
+            asr_inp_list = asr_inp.strip().split(' ')
+            trans_inp_list = trans_inp.strip().split(' ')
+            asr_in_seqs.append(asr_inp_list)
+            trans_in_seqs.append(trans_inp_list)
+            if len(lbl) == 0:
+                labels.append([])
+            else:
+                labels.append(lbl.strip().split(';'))
+
+    if coverage:
+        sampled_data = _get_stratified_sampled_data(asr_in_seqs,trans_in_seqs,labels,coverage)
+        asr_in_seqs = sampled_data.asr_in_seqs.values
+        trans_in_seqs = sampled_data.trans_in_seqs.values
+        labels = sampled_data.labels.values
+        
+
+    if upsample_count:
+        augmented_asr_in_seqs = []
+        augmented_trans_in_seqs = []
+        augmented_labels = []     
+
+        for asr_in_seq,trans_in_seq,label in zip(asr_in_seqs,trans_in_seqs,labels):
+            for _ in range(int(upsample_count)):
+                #augmented_asr_in_seqs.append(asr_in_seq)
+                augmented_asr_in_seqs.append(trans_in_seq)
+                augmented_trans_in_seqs.append(trans_in_seq)
+                augmented_labels.append(label)
+
+        print(len(augmented_asr_in_seqs),len(augmented_trans_in_seqs),len(augmented_labels) )
+
+
+        return augmented_asr_in_seqs,augmented_trans_in_seqs,augmented_labels  
+
+    return asr_in_seqs,trans_in_seqs,labels
+
 def read_wcn_data(fn,coverage=None,upsample_count=None):
     '''
     * fn: wcn data file name
