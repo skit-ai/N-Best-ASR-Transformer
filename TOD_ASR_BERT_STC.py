@@ -21,7 +21,7 @@ sys.path.append(install_path)
 
 from utils.util import make_logger, get_exp_dir_bert
 from utils.fscore import update_f1, compute_f1
-from utils.dataset.tod_asr_util import read_wcn_data, prepare_wcn_dataloader, observability_lens, EpochInfoCollector
+from utils.dataset.tod_asr_util import read_wcn_data, prepare_wcn_dataloader,read_wcn_train_data, observability_lens, EpochInfoCollector
 from utils.gpu_selection import auto_select_gpu
 from utils.bert_xlnet_inputs import prepare_inputs_for_bert_xlnet_one_seq, prepare_inputs_for_bert_xlnet,prepare_inputs_for_bert_xlnet_seq_base, prepare_inputs_for_bert_xlnet_seq_ids,prepare_inputs_for_roberta
 from utils.pos_util import get_sequential_pos
@@ -83,6 +83,9 @@ def parse_arguments():
 
     ######################## system act #########################
     parser.add_argument('--with_system_act', action='store_true', help='whether to include the last system act')
+    parser.add_argument('--coverage', type=float)
+    parser.add_argument('--upsample_count', type=float)
+
 
     ####################### Loss function setting ###############
 
@@ -489,7 +492,7 @@ if __name__ == '__main__':
     # dataloader preparation
     opt.n_accum_steps = 4 if opt.n_layers == 12 else 1
 
-    train_data = read_wcn_data(os.path.join(opt.dataroot, opt.train_file))
+    train_data = read_wcn_train_data(os.path.join(opt.dataroot, opt.train_file),opt.coverage,opt.upsample_count)
     valid_data = read_wcn_data(os.path.join(opt.dataroot, opt.valid_file))
     test_data = read_wcn_data(os.path.join(opt.dataroot, opt.test_file))
     train_dataloader = prepare_wcn_dataloader(train_data, memory, int(opt.batchSize / opt.n_accum_steps),
