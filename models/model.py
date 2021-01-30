@@ -291,14 +291,14 @@ class TOD_ASR_Transformer_STC(nn.Module):
         lin_in=None 
 
         # encoder on asr out 
-        outputs = self.bert_encoder(input_ids=input_ids,attention_mask=input_ids>0)
+        outputs = self.bert_encoder(input_ids=input_ids,attention_mask=input_ids>0,token_type_ids=seg_ids)
         sequence_output = outputs[0]
         asr_lin_in = sequence_output[:, 0, :]
 
         #encoder on manual transcription
         trans_lin_in = None
         if trans_input_ids is not None:
-            trans_outputs = self.bert_encoder(input_ids=trans_input_ids,attention_mask=trans_input_ids>0)
+            trans_outputs = self.bert_encoder(input_ids=trans_input_ids,attention_mask=trans_input_ids>0,token_type_ids=seg_ids)
             trans_sequence_output = trans_outputs[0]
             trans_lin_in = trans_sequence_output[:, 0, :]
         

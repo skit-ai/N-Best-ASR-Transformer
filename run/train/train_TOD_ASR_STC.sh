@@ -45,9 +45,14 @@ seed=999
 ################### loss function ###########
 add_l2_loss=false
 
+################## use system act ##########
+add_system_act=true
+add_segment_ids=true
+
+
 ################## pre - trained mode ########
 #pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta
-pre_trained_model='xlm-roberta'
+pre_trained_model='bert'
 
 #pass the checkpoint path to tod pre-trained model if you want to use model 
 #NOTE : You need to pass this value parameter to --tod_pre_trained_model if you wish you use this model. 
@@ -62,5 +67,7 @@ python3 TOD_ASR_BERT_STC.py \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
     --experiment ${exp_path} \
     --add_l2_loss ${add_l2_loss} \
-    --pre_trained_model ${pre_trained_model}
+    --pre_trained_model ${pre_trained_model} \
+    --add_system_act ${add_system_act} \
+    --add_segment_ids ${add_segment_ids}
     #--tod_pre_trained_model ${pre_trained_model} Uncomment this if you wish to tod-bert  

@@ -103,6 +103,15 @@ def parse_arguments():
     parser.add_argument('--pre_trained_model',help = 'pre-trained model name to use among bert,roberta,xlm-roberta')
     parser.add_argument('--tod_pre_trained_model',help = 'tod_pre_trained model checkpoint path')
 
+    ##################### System act config ###################################
+    
+    parser.add_argument('--add_system_act',type=bool,default=True, help = 'parameter to decide to add system act')
+
+    
+    ##################### Config to decide on segement ids ###################################
+    parser.add_argument('--add_segment_ids',type=bool,default=False, help = 'parameter to decide to add segment ids')
+
+
     opt = parser.parse_args()
     
     ######################### option verification & adjustment #########################
@@ -241,10 +250,13 @@ def train_epoch(model, data, opt, memory):
         # prepare inputs for BERT/XLNET
         inputs = {}
          #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
-        input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,opt,device=opt.device)
-        trans_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,opt,device=opt.device)
+        input_ids,seg_input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,opt,device=opt.device)
+        trans_input_ids,seg_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,opt,device=opt.device)
         # forward
-        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,classifier_input_type="asr")
+        if not opt.add_segment_ids:
+            seg_input_ids = None 
+
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,seg_ids=seg_input_ids,classifier_input_type="asr")
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)
@@ -467,8 +479,8 @@ if __name__ == '__main__':
     opt = parse_arguments()
     print('Karthik is a good boy')
     if opt.tod_pre_trained_model:
-        opt.tokenizer = AutoTokenizer.from_pretrained(opt.custom_pre_trained_model)
-        opt.pretrained_model = AutoModel.from_pretrained(opt.custom_pre_trained_model)
+        opt.tokenizer = AutoTokenizer.from_pretrained(opt.tod_pre_trained_model)
+        opt.pretrained_model = AutoModel.from_pretrained(opt.tod_pre_trained_model)
     else:
         if MODEL_CLASSES.get(opt.pre_trained_model):
             pre_trained_model,pre_trained_tokenizer,model_name = MODEL_CLASSES.get(opt.pre_trained_model) 
