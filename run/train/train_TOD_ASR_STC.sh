@@ -12,7 +12,11 @@ cls_type='stc'
 
 #################### data & vocab dirs ####################
 dataset="dstc2"
-dataroot="dstc2_data/transcription_added_data/processed_data/raw"
+
+#You can keep this fixed 
+dataroot="dstc2_data/asr_transcription_sep_v1/processed_data/raw"
+
+#Pass path to export checkpoint and logs
 exp_path="exp/exp_Transcript_L2_XLM_ROBERT/"
 
 #################### pretrained embedding ####################
