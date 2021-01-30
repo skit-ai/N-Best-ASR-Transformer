@@ -1041,7 +1041,7 @@ def prepare_inputs_for_bert_xlnet_seq_ids(raw_in, tokenizer, device):
     
     return bert_input_ids,seg_input_ids,input_lens
 
-def prepare_inputs_for_roberta(raw_in, tokenizer,opt,device):
+def prepare_inputs_for_roberta(raw_in, tokenizer, opt,device):
     '''
     @ input:
     - raw_in: list of strings
