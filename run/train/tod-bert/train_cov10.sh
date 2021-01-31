@@ -17,7 +17,7 @@ dataset="dstc2"
 dataroot="dstc2_data/asr_transcription_sep_v1/processed_data/raw"
 
 #Pass path to export checkpoint and logs
-exp_path="exp/exp_bert_sep_segment_ids/"
+exp_path="exp/exp_BERT/upsampled/cov10per/"
 
 #################### pretrained embedding ####################
 fix_bert_model=false
@@ -41,7 +41,7 @@ init_range=0.02
 seed=999
 
 upsample_count=3
-coverage=0.05
+coverage=0.10
 
 ################## pre - trained mode ########
 #pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta

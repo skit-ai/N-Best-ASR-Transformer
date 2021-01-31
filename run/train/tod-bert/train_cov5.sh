@@ -17,7 +17,7 @@ dataset="dstc2"
 dataroot="dstc2_data/asr_transcription_sep_v1/processed_data/raw"
 
 #Pass path to export checkpoint and logs
-exp_path="exp/exp_bert_sep_segment_ids/"
+exp_path="exp/exp_BERT/upsampled/cov5per/"
 
 #################### pretrained embedding ####################
 fix_bert_model=false
