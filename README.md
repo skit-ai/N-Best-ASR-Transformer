@@ -27,28 +27,29 @@ The data is preprocessed and saved in `dstc2_data/processed_data/*`, where each 
 ```
 
 
-## 2. Experiments
+## 2. Downstream classifier setting 
 
-We use both discriminative (NC & STC) and generative (TFHD) approaches for the output module:
-
-- NC (**N**aive **C**lassifier): All `act-slot-value` triplets are classified by one classifier. In this case, there may be multiple values for a certain `act-slot` pair. This method is not presented in the paper.
-- STC (**S**emantic **T**uple **C**lassifier): We build two classifiers, the first one for `act-slot` pairs and the second one for `value`.
-- TFHD (**T**rans**F**ormer-based **H**ierarchical **D**ecoder): We adopt the method from [this paper](https://arxiv.org/pdf/1904.04498.pdf). The hierarchical model builds classifiers for the `acts` and `slots`, and generate values with a sequence-to-sequence model with pointer network. We make two  changes as follows:
-  - Change the backbone model from LSTM to Transformer;
-  - Embed the `acts` and `slots` with BERT. 
+STC (**S**emantic **T**uple **C**lassifier): We build two classifiers, the first one for `act-slot` pairs and the second one for `value`.
+ 
 
 Recommended hyper-parameters have been given in the scripts, and you can adjust them according to your needs. 
 
-### 2.1 ASR-Hypothesis + System Act + STS
+### 3. Run Script and parameters 
 
-- train the model
+  Train and Evalute the Model
 
   ```bash
   ./run/train/train_TOD_ASR_STC.sh
   ```
+    ### Parameters:
+    -- pre_trained_model ```pre-trained model name to use among bert,roberta,xlm-roberta```
+    -- add_l2_loss   ``` flag used to set usage of MSE loss between asr and transcript hidden state ```
+    -- tod_pre_trained_model ```Path to TOD pre-trained checkpoint Note: This will override pre_trained_model value if passed``` 
+    -- add_segment_ids ```Flag to decide to add segment ids```
+    -- without_system_act ````Flag to remove previous system act [In our case this is previous system utterance]```
+    
 
-
-## 3. Results
+## 4. Results
 
 Results of TOD-ASR-BERT and previous SOTA results:
 
