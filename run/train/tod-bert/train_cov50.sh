@@ -59,7 +59,7 @@ python3 TOD_ASR_BERT_STC.py \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
     --experiment ${exp_path} \
-    --pre_trained_model ${pre_trained_model} \
+    --pre_trained_model ${pre_trained_model}  \--coverage ${coverage} --upsample_count ${upsample_count}\
     --add_segment_ids  #flag to add or remove segment ids  
     #--without_system_act #Uncomment this if you wish to remove system act 
     #--add_l2_loss \ #Uncomment this if you wish to use l2 loss 
