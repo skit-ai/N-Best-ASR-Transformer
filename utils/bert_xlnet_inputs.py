@@ -1105,22 +1105,20 @@ def prepare_inputs_for_roberta(raw_in, tokenizer, opt,device):
             seg_ids.append(seq_a_segments + seq_b_segments)   
 
         #In case of pre-trained model like bert,roberta
-        elif opt.add_system_act:
+        elif opt.without_system_act:
+            tok_seq = [tokenizer.cls_token] + tok_seq_b + [tokenizer.sep_token]
+            bert_inputs.append(tok_seq)
+        else:           
+            #create one sequence
             tok_seq_a = [tokenizer.cls_token] + tok_seq_a 
             #Add [SEP] token to end seq_b 
             tok_seq_b = [seq_separator] + tok_seq_b + [tokenizer.sep_token]            
-
             #create one sequence
             tok_seq = tok_seq_a + tok_seq_b
             bert_inputs.append(tok_seq)
             seq_a_segments = [sequence_a_segment_id] * len(tok_seq_a)
             seq_b_segments = [sequence_b_segment_id] * len(tok_seq_b) 
             seg_ids.append(seq_a_segments + seq_b_segments)
-
-        else:            
-            #create one sequence
-            tok_seq = [tokenizer.cls_token] + tok_seq_b + [tokenizer.sep_token]
-            bert_inputs.append(tok_seq)
              
         #Add [SEP] token to end seq_b
         #bert_inputs.append([tokenizer.cls_token] + tok_seq + [tokenizer.sep_token])
@@ -1138,6 +1136,5 @@ def prepare_inputs_for_roberta(raw_in, tokenizer, opt,device):
         seg_input_ids = [seg_id + [0] * (max_len - len(seg_id)) for seg_id in seg_ids]
         assert len(seg_input_ids[0]) == max_len
         seg_input_ids = torch.tensor(seg_input_ids, dtype=torch.long, device=device)
-        
-    print("bert inputs shape",bert_input_ids.shape,"seg ids shape",seg_input_ids.shape)
+
     return bert_input_ids,seg_input_ids,input_lens

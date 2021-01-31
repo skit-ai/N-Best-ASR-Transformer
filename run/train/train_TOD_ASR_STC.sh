@@ -17,7 +17,7 @@ dataset="dstc2"
 dataroot="dstc2_data/asr_transcription_sep_v1/processed_data/raw"
 
 #Pass path to export checkpoint and logs
-exp_path="exp/exp_Transcript_L2_XLM_ROBERT/"
+exp_path="exp/exp_bert_sep_segment_ids/"
 
 #################### pretrained embedding ####################
 fix_bert_model=false
@@ -40,14 +40,6 @@ init_type='uf'  # uf/xuf
 init_range=0.02
 seed=999
 
-#################### cmd ####################
-
-################### loss function ###########
-add_l2_loss=false
-
-################## use system act ##########
-add_system_act=true
-add_segment_ids=true
 
 
 ################## pre - trained mode ########
@@ -66,8 +58,8 @@ python3 TOD_ASR_BERT_STC.py \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
     --experiment ${exp_path} \
-    --add_l2_loss ${add_l2_loss} \
     --pre_trained_model ${pre_trained_model} \
-    --add_system_act ${add_system_act} \
-    --add_segment_ids ${add_segment_ids}
-    #--tod_pre_trained_model ${pre_trained_model} Uncomment this if you wish to tod-bert  
+    --add_segment_ids  #flag to add or remove segment ids  
+    #--without_system_act #Uncomment this if you wish to remove system act 
+    #--add_l2_loss \ #Uncomment this if you wish to use l2 loss 
+    #--tod_pre_trained_model ${pre_trained_model} #Uncomment this if you wish to tod-bert  

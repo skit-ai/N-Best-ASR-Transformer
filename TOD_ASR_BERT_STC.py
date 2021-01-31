@@ -95,7 +95,7 @@ def parse_arguments():
 
     ####################### Loss function setting ###############
 
-    parser.add_argument('--add_l2_loss',type=bool,default=False , help='whether to add l2 loss between pure and asr transcripts')
+    parser.add_argument('--add_l2_loss',action='store_true',help='whether to add l2 loss between pure and asr transcripts')
 
     ###################### Pre-trained model config ##########################
 
@@ -105,11 +105,11 @@ def parse_arguments():
 
     ##################### System act config ###################################
     
-    parser.add_argument('--add_system_act',type=bool,default=True, help = 'parameter to decide to add system act')
+    parser.add_argument('--without_system_act',action='store_true',help = 'parameter to decide to add system act')
 
     
     ##################### Config to decide on segement ids ###################################
-    parser.add_argument('--add_segment_ids',type=bool,default=False, help = 'parameter to decide to add segment ids')
+    parser.add_argument('--add_segment_ids',action='store_true', help = 'parameter to decide to add segment ids')
 
 
     opt = parser.parse_args()
@@ -165,7 +165,6 @@ def cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, me
 
     loss_record = 0.
     total_loss = 0.
-
     # MSE loss 
     if opt.add_l2_loss and (asr_hidden_state is not None) and (transcription_hidden_state is not None):
         mse_loss = opt.mse_loss_function(asr_hidden_state,transcription_hidden_state)
