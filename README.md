@@ -41,13 +41,13 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
   ```bash
   ./run/train/train_TOD_ASR_STC.sh
   ```
-    Parameters:
-    -- pre_trained_model  pre-trained model name to use among bert,roberta,xlm-roberta
-    -- add_l2_loss   flag used to set usage of MSE loss between asr and transcript hidden state
-    -- tod_pre_trained_model Path to TOD pre-trained checkpoint Note: This will override pre_trained_model value if passed
-    -- add_segment_ids Flag to decide to add segment ids
-    -- without_system_act Flag to remove previous system act [In our case this is previous system utterance]
     
+  Parameters: <br />
+    -- **pre_trained_model**  `pre-trained model name to use among bert,roberta,xlm-roberta`  <br />
+    -- **add_l2_loss**   `Flag used to set usage of MSE loss between asr and transcript hidden state`  <br />
+    -- **tod_pre_trained_model** `Path to TOD pre-trained checkpoint Note: This will override pre_trained_model value if passed`  <br />
+    -- **add_segment_ids** `Flag to decide to add segment ids`  <br />
+    -- **without_system_act** `Flag to remove previous system act [In our case this is previous system utterance]`    
 
 ## 4. Results
 
