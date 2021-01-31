@@ -1105,9 +1105,13 @@ def prepare_inputs_for_roberta(raw_in, tokenizer, opt,device):
             seg_ids.append(seq_a_segments + seq_b_segments)   
 
         #In case of pre-trained model like bert,roberta
+
+        # without system act flag is set 
         elif opt.without_system_act:
             tok_seq = [tokenizer.cls_token] + tok_seq_b + [tokenizer.sep_token]
             bert_inputs.append(tok_seq)
+
+        # this is usual case of [CLS] system_utterance [SEP] user hyp1 [SEP] user hyp2   
         else:           
             #create one sequence
             tok_seq_a = [tokenizer.cls_token] + tok_seq_a 
