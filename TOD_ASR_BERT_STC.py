@@ -251,12 +251,12 @@ def train_epoch(model, data, opt, memory):
         inputs = {}
          #pretrained_inputs,input_lens=prepare_inputs_for_bert_xlnet_seq_base(raw_in,opt.tokenizer,device=opt.device)
         input_ids,seg_input_ids,input_lens=prepare_inputs_for_roberta(raw_in,opt.tokenizer,opt,device=opt.device)
-        trans_input_ids,seg_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,opt,device=opt.device)
+        trans_input_ids,trans_seg_input_ids,trans_input_lens=prepare_inputs_for_roberta(raw_trans_in,opt.tokenizer,opt,device=opt.device)
         # forward
         if not opt.add_segment_ids:
             seg_input_ids = None 
 
-        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,seg_ids=seg_input_ids,classifier_input_type="asr")
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,seg_ids=seg_input_ids,trans_seg_ids=trans_seg_input_ids,classifier_input_type="asr")
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)

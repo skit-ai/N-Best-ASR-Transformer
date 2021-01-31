@@ -1055,9 +1055,11 @@ def prepare_inputs_for_roberta(raw_in, tokenizer, opt,device):
     sequence_a_segment_id=0
     sequence_b_segment_id=1
     #This stores one or two separator token according to 
-    seq_separator = [tokenizer.sep_token]
+    seq_separator = tokenizer.sep_token
     for seq in raw_in:    
         tok_seq = []
+        tok_seq_a = []
+        tok_seq_b = []
         #get index of [USR] word as we would like to get the 
         usr_idx = seq.index("[USR]")
         #Get the previous system response 
@@ -1106,10 +1108,10 @@ def prepare_inputs_for_roberta(raw_in, tokenizer, opt,device):
         elif opt.add_system_act:
             tok_seq_a = [tokenizer.cls_token] + tok_seq_a 
             #Add [SEP] token to end seq_b 
-            tok_seq_b = tok_seq_b + [tokenizer.sep_token]            
+            tok_seq_b = [seq_separator] + tok_seq_b + [tokenizer.sep_token]            
 
             #create one sequence
-            tok_seq = tok_seq_a + [seq_separator] + tok_seq_b
+            tok_seq = tok_seq_a + tok_seq_b
             bert_inputs.append(tok_seq)
             seq_a_segments = [sequence_a_segment_id] * len(tok_seq_a)
             seq_b_segments = [sequence_b_segment_id] * len(tok_seq_b) 
@@ -1136,5 +1138,6 @@ def prepare_inputs_for_roberta(raw_in, tokenizer, opt,device):
         seg_input_ids = [seg_id + [0] * (max_len - len(seg_id)) for seg_id in seg_ids]
         assert len(seg_input_ids[0]) == max_len
         seg_input_ids = torch.tensor(seg_input_ids, dtype=torch.long, device=device)
-    
+        
+    print("bert inputs shape",bert_input_ids.shape,"seg ids shape",seg_input_ids.shape)
     return bert_input_ids,seg_input_ids,input_lens

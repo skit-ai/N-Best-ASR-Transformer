@@ -285,7 +285,7 @@ class TOD_ASR_Transformer_STC(nn.Module):
         #self.init_weight(opt.init_type, opt.init_range)
 
 
-    def forward(self,input_ids,trans_input_ids=None,seg_ids=None,return_attns=False,classifier_input_type="asr"):
+    def forward(self,input_ids,trans_input_ids=None,seg_ids=None,trans_seg_ids=None,return_attns=False,classifier_input_type="asr"):
         
         #linear input to fed to downstream classifier 
         lin_in=None 
@@ -298,7 +298,7 @@ class TOD_ASR_Transformer_STC(nn.Module):
         #encoder on manual transcription
         trans_lin_in = None
         if trans_input_ids is not None:
-            trans_outputs = self.bert_encoder(input_ids=trans_input_ids,attention_mask=trans_input_ids>0,token_type_ids=seg_ids)
+            trans_outputs = self.bert_encoder(input_ids=trans_input_ids,attention_mask=trans_input_ids>0,token_type_ids=trans_seg_ids)
             trans_sequence_output = trans_outputs[0]
             trans_lin_in = trans_sequence_output[:, 0, :]
         
