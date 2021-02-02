@@ -12,8 +12,12 @@ cls_type='stc'
 
 #################### data & vocab dirs ####################
 dataset="dstc2"
-dataroot="dstc2_data/processed_data"
-exp_path="exp/exp_STC_BERT/"
+
+#You can keep this fixed 
+dataroot="dstc2_data/asr_transcription_sep_v1/processed_data/raw"
+
+#Pass path to export checkpoint and logs
+exp_path="exp/exp_BERT/upsampled/cov5per/"
 
 #################### pretrained embedding ####################
 fix_bert_model=false
@@ -29,24 +33,34 @@ bs=32
 mn=5.0
 me=50
 optim="bertadam"  # bertadam/adamw
-lr=5e-5  # for non-bert params
-bert_lr=5e-5
+lr=3e-5  # for non-bert params
+bert_lr=3e-5
 wp=0.1  #warmup
 init_type='uf'  # uf/xuf
 init_range=0.02
 seed=999
 
-#################### cmd ####################
+upsample_count=3
+coverage=0.05
 
-python3 WCN_BERT_STC.py \
-    --emb_size ${es} --hidden_size ${hs} ${msl:+--max_seq_len ${msl}} \
-    --n_layers ${nl} --n_head ${nh} --d_k ${dk} --d_v ${dv} \
-    --score_util ${score_util} --sent_repr ${sent_repr} --cls_type ${cls_type} \
+################## pre - trained mode ########
+#pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta
+pre_trained_model='bert'
+
+#pass the checkpoint path to tod pre-trained model if you want to use model 
+#NOTE : You need to pass this value parameter to --tod_pre_trained_model if you wish you use this model. 
+tod_pre_trained_model='multi-seq-asr-bert/ToD-BERT-jnt'
+
+python3 multi_seq_asr_bert_stc.py \
     --dataset ${dataset} --dataroot ${dataroot} \
     --bert_model_name ${bert_model_name} ${fix_bert_model:+--fix_bert_model} \
     --deviceId ${device} --random_seed ${seed} --l2 ${l2} --dropout ${dp} --bert_dropout ${bert_dp} \
     --optim_choice ${optim} --lr ${lr} --bert_lr ${bert_lr} --warmup_proportion ${wp} \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
-    --experiment ${exp_path}
-
+    --experiment ${exp_path} \
+    --pre_trained_model ${pre_trained_model} \--coverage ${coverage} --upsample_count ${upsample_count}\
+    --add_segment_ids  #flag to add or remove segment ids  
+    #--without_system_act #Uncomment this if you wish to remove system act 
+    #--add_l2_loss \ #Uncomment this if you wish to use l2 loss 
+    #--tod_pre_trained_model ${pre_trained_model} #Uncomment this if you wish to tod-bert  

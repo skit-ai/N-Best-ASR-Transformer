@@ -12,8 +12,8 @@ cls_type='stc'
 
 #################### data & vocab dirs ####################
 dataset="dstc2"
-dataroot="dstc2_data/processed_data"
-exp_path="exp/exp_STC_BERT/"
+dataroot="dstc2_data/in_trans_lab_sample_complexity/processed_data/raw"
+exp_path="exp/exp_TOD_STC_XLM_ROBERT/augmented/complexity_20per"
 
 #################### pretrained embedding ####################
 fix_bert_model=false
@@ -29,25 +29,24 @@ bs=32
 mn=5.0
 me=50
 optim="bertadam"  # bertadam/adamw
-lr=5e-5  # for non-bert params
-bert_lr=5e-5
+lr=3e-5  # for non-bert paracd ms
+bert_lr=3e-5
 wp=0.1  #warmup
 init_type='uf'  # uf/xuf
 init_range=0.02
 seed=999
 
-#################### cmd ####################
+############### sample complexity arguments ##########
+coverage=0.02
+upsample_count=3
 
-python3 WCN_BERT_STC.py \
-    --testing \
-    --emb_size ${es} --hidden_size ${hs} ${msl:+--max_seq_len ${msl}} \
-    --n_layers ${nl} --n_head ${nh} --d_k ${dk} --d_v ${dv} \
-    --score_util ${score_util} --sent_repr ${sent_repr} --cls_type ${cls_type} \
+#################### cmd ####################
+python3 multi_seq_asr_bert_stc.py \
     --dataset ${dataset} --dataroot ${dataroot} \
     --bert_model_name ${bert_model_name} ${fix_bert_model:+--fix_bert_model} \
     --deviceId ${device} --random_seed ${seed} --l2 ${l2} --dropout ${dp} --bert_dropout ${bert_dp} \
     --optim_choice ${optim} --lr ${lr} --bert_lr ${bert_lr} --warmup_proportion ${wp} \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
-    --experiment ${exp_path}
-
+    --experiment ${exp_path} --coverage ${coverage} --upsample_count ${upsample_count}
+ 

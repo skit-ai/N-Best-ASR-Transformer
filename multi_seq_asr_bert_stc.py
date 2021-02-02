@@ -477,9 +477,9 @@ def test(model, train_dataloader, valid_dataloader, test_dataloader, opt, memory
 
 
 if __name__ == '__main__':
-    #tod-bert-models/ToD-BERT-jnt
+
     opt = parse_arguments()
-    print('Karthik is a good boy')
+
     if opt.tod_pre_trained_model:
         opt.tokenizer = AutoTokenizer.from_pretrained(opt.tod_pre_trained_model)
         opt.pretrained_model = AutoModel.from_pretrained(opt.tod_pre_trained_model)

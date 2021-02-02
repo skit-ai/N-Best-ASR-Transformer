@@ -1,4 +1,4 @@
-# TOD-ASR-BERT
+# Multi-Seq ASR BERT
 
 This project aims to build a new SOTA model on the DSTC2 dataset 
 
@@ -39,7 +39,7 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
   Train and Evalute the Model
 
   ```bash
-  ./run/train/train_TOD_ASR_STC.sh
+  ./run/train/train_MultiSeq_ASR_BERT_STC.sh
   ```
     
   Parameters: <br />
@@ -51,16 +51,12 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
 
 ## 4. Results
 
-Results of TOD-ASR-BERT and previous SOTA results:
+Results of Multi-Seq ASR BERT and previous SOTA results:
 
-| Model              | with system act | F1 score (%) | Acc. (%) |
-| ---------------    | --------------- | ------------ | -------- |
-| WCN-BERT + STC     | True            | 87.86        | 81.24    |
-| WCN-BERT + STC     | False           | 86.71        | 79.68    |
-| WCN-BERT + TFHD    | True            | 87.37        | 80.77    |
-| WCN-BERT + TFHD    | False           | 86.15        | 79.12    |
-| TOD-ASR-BERT + STC | True            | 87.4         | 81.8     |
-| TOD-WCN-BERT + STC | True            | 88.6         | 81.x     |   
+| Model               | F1 score (%) | Acc. (%) |
+| ---------------     | ------------ | -------- |
+| Multi-Seq ASR BERT  | 87.4         | 81.9     |
+| Multi-Seq ASR XLM-R | 87.8         | 81.8     |   
 
 Results can be different due to various environments and hyper-parameter settings.
 
