@@ -1,0 +1,11 @@
+exp/
+log/
+**/*.swp
+**/*.pyc
+**/__pycache__/
+run/train_sbatch
+tod-bert-models
+dstc2_data/
+wcn-bert-env/
+asr-tod-env/ 
+
