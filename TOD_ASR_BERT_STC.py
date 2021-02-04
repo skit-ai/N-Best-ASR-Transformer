@@ -255,7 +255,7 @@ def train_epoch(model, data, opt, memory):
         if not opt.add_segment_ids:
             seg_input_ids = None 
 
-        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,seg_ids=seg_input_ids,trans_seg_ids=trans_seg_input_ids,classifier_input_type="asr")
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(opt,input_ids,trans_input_ids,seg_ids=seg_input_ids,trans_seg_ids=trans_seg_input_ids,classifier_input_type="asr")
         # top_scores -> (batch, #top_classes)
         # batch_preds -> (batch, #bottom_classes)  # not used in this case
         # bottom_scores_dict -> 'lin_i': (batch, #bottom_classes_per_top_label)
@@ -328,7 +328,7 @@ def eval_epoch(model, data, opt, memory, fp, efp):
         if not opt.add_segment_ids:
             seg_input_ids = None 
 
-        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(input_ids,trans_input_ids,seg_ids=seg_input_ids,trans_seg_ids=trans_seg_input_ids,classifier_input_type="asr")
+        top_scores, bottom_scores_dict, batch_preds,asr_hidden_rep,trans_hidden_rep = model(opt,input_ids,trans_input_ids,seg_ids=seg_input_ids,trans_seg_ids=trans_seg_input_ids,classifier_input_type="asr")
         
         #top_scores, bottom_scores_dict, batch_preds = model(inputs, masks, return_attns=False)
         loss, _ = cal_total_loss(top_scores, bottom_scores_dict, batch_preds, batch_labels, memory, opt)
