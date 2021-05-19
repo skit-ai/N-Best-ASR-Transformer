@@ -1,16 +1,20 @@
 # Multi-Seq ASR BERT
 
-This project aims to build a new SOTA model on the DSTC2 dataset 
+## Introduction
 
-## 0. Setup
+### Abstract
+Transformer models have achieved state-of-the-art generalization performance on various language understanding tasks but using them on raw Automatic Speech Recognition (ASR) output is sub-optimal because of transcription errors. Common approaches to mitigate this involve using richer output from ASR either in the form of transcription lattice or n-best hypotheses. Using lattices usually gives better performance at the cost of modifications in the architecture of models since they are designed to take plain text input. In our work, we use concatenated n-best ASR hypotheses as the input to the transformer encoder models like BERT. We show that this approach performs as well as the state-of-the-art approach on DSTC2 dataset. Since the input is closer in structure to text based transformers, our approach outperforms state-of-the-art WCN model in low data regimes. Additionally, since popular ASR APIs do not provide lattice level access, this simplification helps us to keep the downstream model relatively independent.  
 
-```bash
-pip3 install -r requirements.txt
-```
+### Architecture
+
+[![arch-1.png](https://i.postimg.cc/bwds3pR9/arch-1.png)](https://postimg.cc/RW5S0ryW)
+
+## About Data
+
 
 ## 1. Data
 
-We conduct our experiments on a benchmark SLU dataset, **DSTC2**. Origin data can be obtained [HERE](http://camdial.org/~mh521/dstc/).
+We conduct our experiments on a benchmark SLU dataset which ASR alternatives, **DSTC2**. Origin data can be obtained [here](http://camdial.org/~mh521/dstc/).
 
 - Data preprocessing:
     ```bash
@@ -27,12 +31,9 @@ The data is preprocessed and saved in `dstc2_data/processed_data/*`, where each 
 ```
 
 
-## 2. Downstream classifier setting 
+## 3. Downstream classifier setting 
 
-STC (**S**emantic **T**uple **C**lassifier): We build two classifiers, the first one for `act-slot` pairs and the second one for `value`.
- 
-
-Recommended hyper-parameters have been given in the scripts, and you can adjust them according to your needs. 
+We build two classifiers, the first one for `act-slot` pairs and the second one for `value`.
 
 ### 3. Run Script and parameters 
 
@@ -43,11 +44,11 @@ Recommended hyper-parameters have been given in the scripts, and you can adjust 
   ```
     
   Parameters: <br />
-    -- **pre_trained_model**  `pre-trained model name to use among bert,roberta,xlm-roberta`  <br />
-    -- **add_l2_loss**   `Flag used to set usage of MSE loss between asr and transcript hidden state`  <br />
-    -- **tod_pre_trained_model** `Path to TOD pre-trained checkpoint Note: This will override pre_trained_model value if passed`  <br />
-    -- **add_segment_ids** `Flag to decide to add segment ids`  <br />
-    -- **without_system_act** `Flag to remove previous system act [In our case this is previous system utterance]`    
+    -- **pre_trained_model** : pre-trained model name to use among `"bert"`,`"roberta"`,`"xlm-roberta"`  <br />
+    -- **add_l2_loss**: Flag used to set usage of MSE loss between asr and transcript hidden state  <br />
+    -- **tod_pre_trained_model**: Path to TOD pre-trained checkpoint Note: This will override pre_trained_model value if passed. <br>
+    -- **add_segment_ids** : Flag to decide to add segment ids  <br>
+    -- **without_system_act**: Flag to remove previous system act [In our case this is previous system utterance]  
 
 ## 4. Results
 
@@ -58,7 +59,11 @@ Results of Multi-Seq ASR BERT and previous SOTA results:
 | Multi-Seq ASR BERT  | 87.4         | 81.9     |
 | Multi-Seq ASR XLM-R | 87.8         | 81.8     |   
 
-Results can be different due to various environments and hyper-parameter settings.
+Results are average after 5 runs on the dataset. each having a unique random seed.
 
 
+## Citation
 
+```
+
+```

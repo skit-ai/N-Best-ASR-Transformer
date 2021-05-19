@@ -8,4 +8,4 @@ tod-bert-models
 dstc2_data/
 wcn-bert-env/
 asr-tod-env/ 
-
+.vscode
