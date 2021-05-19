@@ -14,7 +14,7 @@ cls_type='stc'
 dataset="dstc2"
 
 #You can keep this fixed 
-dataroot="dstc2_data/asr_transcription_sep_v1/processed_data/raw"
+dataroot="dstc2_data/processed_data/raw"
 
 #Pass path to export checkpoint and logs
 exp_path="exp/exp_bert_sep_segment_ids/"
@@ -45,7 +45,7 @@ coverage=0.05
 
 ################## pre - trained mode ########
 #pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta
-pre_trained_model='bert'
+pre_trained_model='xlm-roberta'
 
 #pass the checkpoint path to tod pre-trained model if you want to use model 
 #NOTE : You need to pass this value parameter to --tod_pre_trained_model if you wish you use this model. 

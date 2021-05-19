@@ -1,0 +1,6 @@
+train word vocab size: 1492
+all word vocab size: 1739
+out-of-train-vocab size: 247
+#train labels: 149
+#all labels: 176
+out-of-train-label size: 27
