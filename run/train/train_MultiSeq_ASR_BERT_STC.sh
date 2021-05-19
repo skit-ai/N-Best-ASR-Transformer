@@ -1,4 +1,7 @@
 #!/bin/bash
+'''
+Magic bash script to train your model.
+'''
 
 #################### model structure ####################
 es=768  # also d_model; normal: 100 / bert: 768
@@ -22,7 +25,7 @@ exp_path="exp/exp_bert_sep_segment_ids/"
 #################### pretrained embedding ####################
 fix_bert_model=false
 if ! ${fix_bert_model}; then unset fix_bert_model; fi
-bert_model_name='bert-base-uncased'  # bert-base-uncased/xlnet-base-cased
+bert_model_name='bert-base-uncased'  #  bert_model_name = {bert-base-uncased, xlnet-base-cased}
 
 #################### training & testing options ####################
 device=0
@@ -39,9 +42,15 @@ wp=0.1  #warmup
 init_type='uf'  # uf/xuf
 init_range=0.02
 seed=999
+upsample_count=3 # upsamples data set by x times.
 
-upsample_count=3
-coverage=0.05
+#################### Sample Complexity Arguments ####################
+# coverage = (0,1] 
+# where, coverage = 1 means you are including the whole data set for training. 
+# and, coverage < 1 refers to the percentage of samples you want to consider for training your model. 
+# For our work we test our model for sample complexity coverage of {0.05, 0.10, 0.20, 0.50}
+# NOTE- Based on coverage percentage stratified data samples will be picked as a training set.
+coverage = 1 
 
 ################## pre - trained mode ########
 #pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta
@@ -59,8 +68,8 @@ python3 multi_seq_asr_bert_stc.py \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
     --experiment ${exp_path} \
-    --pre_trained_model ${pre_trained_model} \
-    --add_segment_ids  #flag to add or remove segment ids  
+    --pre_trained_model ${pre_trained_model}  \--coverage ${coverage} --upsample_count ${upsample_count}\
+    --add_segment_ids    #flag to add or remove segment ids  
     #--without_system_act #Uncomment this if you wish to remove system act 
     #--add_l2_loss \ #Uncomment this if you wish to use l2 loss 
     #--tod_pre_trained_model ${pre_trained_model} #Uncomment this if you wish to multi-seq-asr-bert  
