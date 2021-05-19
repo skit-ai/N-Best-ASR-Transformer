@@ -12,7 +12,7 @@ Transformer models have achieved state-of-the-art generalization performance on 
 
 ### About Data
 
-## 1. Data
+## Data
 
 We conduct our experiments on a benchmark SLU dataset which ASR alternatives, **DSTC2**. Origin data can be obtained [here](http://camdial.org/~mh521/dstc/).
 
@@ -64,12 +64,12 @@ We build two classifiers, the first one for `act-slot` pairs and the second one 
 
  Parameters to perform Sample Complexity related Experiments:  <br />
 
-   -- **coverage**: Based on coverage percentage stratified data samples will be picked as a training set. Coverage = (0,1], where, coverage = 1 means you are including the whole data set for training, and, coverage < 1 refers to the percentage of samples you want to consider for training your model. For our work we test our model for sample complexity coverage of {0.05, 0.10, 0.20, 0.50}.  <br /> 
-   
-   -- **upsample_count**: Upsamples data set by X times. X is a real number.  <br />
+       -- **coverage**: Based on coverage percentage stratified data samples will be picked as a training set. Coverage = (0,1], where, coverage = 1 means you are including the whole data set for training, and, coverage < 1 refers to the percentage of samples you want to consider for training your model. For our work we test our model for sample complexity coverage of {0.05, 0.10, 0.20, 0.50}.  <br /> 
+
+       -- **upsample_count**: Upsamples data set by X times. X is a real number.  <br />
 
 
-## 4. Results
+## Results
 
 Results of Multi-Seq ASR BERT and previous SOTA results:
 
