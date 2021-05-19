@@ -32,6 +32,10 @@ class TOD_ASR_Transformer_STC(nn.Module):
         self.clf = HierarchicalClassifier(opt.top2bottom_dict, fea_dim, opt.label_vocab_size, opt.dropout)
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
     def forward(self,opt,input_ids,trans_input_ids=None,seg_ids=None,trans_seg_ids=None,return_attns=False,classifier_input_type="asr"):
         
         #linear input to fed to downstream classifier 
@@ -49,7 +53,7 @@ class TOD_ASR_Transformer_STC(nn.Module):
         #encoder on manual transcription
         trans_lin_in = None
         if trans_input_ids is not None:
-           #If XLM-Roberta don't pass token type ids 
+            #If XLM-Roberta don't pass token type ids 
             if opt.pre_trained_model and opt.pre_trained_model=="xlm-roberta":
                 trans_outputs = self.bert_encoder(input_ids=trans_input_ids,attention_mask=trans_input_ids>0)
             else:
