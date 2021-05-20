@@ -52,21 +52,21 @@ We build two classifiers, the first one for `act-slot` pairs and the second one 
     
   Parameters: <br />
 
-    -- **pre_trained_model** : pre-trained model name to use among `"bert"`,`"roberta"`,`"xlm-roberta"`  
+    -- pre_trained_model : pre-trained model name to use among `"bert"`,`"roberta"`,`"xlm-roberta"`  
 
-    -- **add_l2_loss**: Flag used to set usage of MSE loss between asr and transcript hidden state.
+    -- add_l2_loss: Flag used to set usage of MSE loss between asr and transcript hidden state.
 
-    -- **tod_pre_trained_model**: Path to TOD pre-trained checkpoint Note: This will override pre_trained_model value if passed.
+    -- tod_pre_trained_model: Path to TOD pre-trained checkpoint Note: This will override pre_trained_model value if passed.
 
-    -- **add_segment_ids** : Flag to decide to add segment ids.
+    -- add_segment_ids : Flag to decide to add segment ids.
 
-    -- **without_system_act**: Flag to remove previous system act [In our case this is previous system utterance]  
+    -- without_system_act: Flag to remove previous system act [In our case this is previous system utterance]  
 
  Parameters to perform Sample Complexity related Experiments:  <br />
 
-       -- **coverage**: Based on coverage percentage stratified data samples will be picked as a training set. Coverage = (0,1], where, coverage = 1 means you are including the whole data set for training, and, coverage < 1 refers to the percentage of samples you want to consider for training your model. For our work we test our model for sample complexity coverage of {0.05, 0.10, 0.20, 0.50}. 
+       -- coverage: Based on coverage percentage stratified data samples will be picked as a training set. Coverage = (0,1], where, coverage = 1 means you are including the whole data set for training, and, coverage < 1 refers to the percentage of samples you want to consider for training your model. For our work we test our model for sample complexity coverage of {0.05, 0.10, 0.20, 0.50}. 
        
-       -- **upsample_count**: Upsamples data set by X times. X is a real number. 
+       -- upsample_count: Upsamples data set by X times. X is a real number. 
 
 
 ## Results
