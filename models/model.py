@@ -32,10 +32,6 @@ class TOD_ASR_Transformer_STC(nn.Module):
         self.clf = HierarchicalClassifier(opt.top2bottom_dict, fea_dim, opt.label_vocab_size, opt.dropout)
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> main
     def forward(self,opt,input_ids,trans_input_ids=None,seg_ids=None,trans_seg_ids=None,return_attns=False,classifier_input_type="asr"):
         
         #linear input to fed to downstream classifier 

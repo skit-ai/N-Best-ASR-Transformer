@@ -50,7 +50,7 @@ upsample_count=3 # upsamples data set by x times.
 # and, coverage < 1 refers to the percentage of samples you want to consider for training your model. 
 # For our work we test our model for sample complexity coverage of {0.05, 0.10, 0.20, 0.50}
 # NOTE- Based on coverage percentage stratified data samples will be picked as a training set.
-coverage = 1 
+coverage=1.0 
 
 ################## pre - trained mode ########
 #pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta
@@ -68,7 +68,9 @@ python3 multi_seq_asr_bert_stc.py \
     --init_type ${init_type} --init_range ${init_range} \
     --batchSize ${bs} --max_norm ${mn} --max_epoch ${me} \
     --experiment ${exp_path} \
-    --pre_trained_model ${pre_trained_model}  \--coverage ${coverage} --upsample_count ${upsample_count}\
+    --pre_trained_model ${pre_trained_model} \
+    --coverage ${coverage} \
+    --upsample_count ${upsample_count} \
     --add_segment_ids    #flag to add or remove segment ids  
     #--without_system_act #Uncomment this if you wish to remove system act 
     #--add_l2_loss \ #Uncomment this if you wish to use l2 loss 
