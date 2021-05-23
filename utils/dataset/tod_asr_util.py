@@ -40,7 +40,7 @@ def _get_stratified_sampled_data(asr_in_seqs,trans_in_seqs,labels,coverage):
     
 
 
-def read_wcn_data(fn,coverage=None,upsample_count=None):
+def read_wcn_data(fn,coverage=None):
     '''
     * fn: wcn data file name
     * line format - word:parent:sibling:type ... \t<=>\tword:pos:score word:pos:score ... \t<=>\tlabel1;label2...
@@ -68,21 +68,6 @@ def read_wcn_data(fn,coverage=None,upsample_count=None):
         trans_in_seqs = sampled_data.trans_in_seqs.values
         labels = sampled_data.labels.values
         
-
-    if upsample_count:
-        augmented_asr_in_seqs = []
-        augmented_trans_in_seqs = []
-        augmented_labels = []     
-
-        for trans_in_seq,label in zip(trans_in_seqs,labels):
-            for _ in range(int(upsample_count)):
-                #upsampling transcriptions 
-                augmented_asr_in_seqs.append(trans_in_seq)
-                augmented_trans_in_seqs.append(trans_in_seq)
-                augmented_labels.append(label)
-
-        return augmented_asr_in_seqs,augmented_trans_in_seqs,augmented_labels  
-
     return asr_in_seqs,trans_in_seqs,labels
 
 

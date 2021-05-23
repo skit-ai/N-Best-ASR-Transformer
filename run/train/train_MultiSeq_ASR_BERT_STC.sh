@@ -42,7 +42,6 @@ wp=0.1  #warmup
 init_type='uf'  # uf/xuf
 init_range=0.02
 seed=999
-upsample_count=3 # upsamples data set by x times.
 
 #################### Sample Complexity Arguments ####################
 # coverage = (0,1] 
@@ -54,7 +53,7 @@ coverage=1.0
 
 ################## pre - trained mode ########
 #pass pre-trained model name if you want to use a pre-trained model from Transformers package like bert,roberta,xlm-roberta
-pre_trained_model='xlm-roberta'
+pre_trained_model='bert'
 
 #pass the checkpoint path to tod pre-trained model if you want to use model 
 #NOTE : You need to pass this value parameter to --tod_pre_trained_model if you wish you use this model. 
@@ -70,7 +69,6 @@ python3 multi_seq_asr_bert_stc.py \
     --experiment ${exp_path} \
     --pre_trained_model ${pre_trained_model} \
     --coverage ${coverage} \
-    --upsample_count ${upsample_count} \
     --add_segment_ids    #flag to add or remove segment ids  
     #--without_system_act #Uncomment this if you wish to remove system act 
     #--add_l2_loss \ #Uncomment this if you wish to use l2 loss 
