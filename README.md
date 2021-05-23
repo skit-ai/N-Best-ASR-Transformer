@@ -41,12 +41,12 @@ The data preprocessing step mentioned above converts the DSTC2 data into the des
 
 We build two classifiers, the first one for `act-slot` pairs and the second one for `value`.
 
-## Training Script and Parameters:
+## Training and Evaluation Script and Parameters:
 
   Run command:
 
   ```bash
-  ./run/train/train_MultiSeq_ASR_BERT_STC.sh
+  ./run/train_eval_MultiSeq_ASR_BERT_STC.sh
   ```
     
   Parameters: <br />
