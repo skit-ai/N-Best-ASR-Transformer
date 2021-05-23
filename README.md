@@ -34,9 +34,8 @@ The data is preprocessed and saved in `dstc2_data/processed_data/*`, where each 
 
 We build our experiments keeping [this](https://github.com/simplc/WCN-BERT) repository as our base code. 
 
-The data preprocessing step mentioned above already converts the data into the desired input format. We use discriminative approaches for the output module. 
+The data preprocessing step mentioned above converts the DSTC2 data into the desired input format. 
 
-All act-slot-value triplets are classified by one classifier. In this case, there may be multiple values for a certain act-slot pair. This method is not presented in the paper.
 
 ### Downstream classifier setting 
 
@@ -62,11 +61,10 @@ We build two classifiers, the first one for `act-slot` pairs and the second one 
 
     --without_system_act: Flag to remove previous system act [In our case this is previous system utterance]  
 
- Parameters to perform Sample Complexity related Experiments:  <br />
+ Parameter to perform Sample Complexity related Experiments:  <br />
 
     --coverage: Based on coverage percentage stratified data samples will be picked as a training set. Coverage = (0,1], where, coverage = 1 means you are including the whole data set for training, and, coverage < 1 refers to the percentage of samples you want to consider for training your model. For our work we test our model for sample complexity coverage of {0.05, 0.10, 0.20, 0.50}. 
-       
-    --upsample_count: Upsamples data set by X times. X is a real number. 
+        
 
 
 ## Results
