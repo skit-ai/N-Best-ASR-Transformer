@@ -1,9 +1,9 @@
-# Multi-Seq ASR BERT
+# N-Best-ASR-Transformer
 
 This repository contains code for Multi-Seq ASR BERT: A simplified approach to model ASR confusion in SLU. The paper has been accepted to ACL-IJCNLP 2021.
 
 ## Introduction
-### About Multi-Seq ASR BERT
+### About N-Best-ASR-Transformer
 Transformer models have achieved state-of-the-art generalization performance on various language understanding tasks but using them on raw Automatic Speech Recognition (ASR) output is sub-optimal because of transcription errors. Common approaches to mitigate this involve using richer output from ASR either in the form of transcription lattice or n-best hypotheses. Using lattices usually gives better performance at the cost of modifications in the architecture of models since they are designed to take plain text input. In our work, we use concatenated n-best ASR hypotheses as the input to the transformer encoder models like BERT. We show that this approach performs as well as the state-of-the-art approach on DSTC2 dataset. Since the input is closer in structure to text based transformers, our approach outperforms state-of-the-art WCN model in low data regimes. Additionally, since popular ASR APIs do not provide lattice level access, this simplification helps us to keep the downstream model relatively independent.  
 
 ### Architecture
