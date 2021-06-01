@@ -73,8 +73,8 @@ Results of Multi-Seq ASR BERT and previous SOTA results:
 
 | Model               | F1 score (%) | Acc. (%) |
 | ---------------     | ------------ | -------- |
-| Multi-Seq ASR BERT  | 87.4         | 81.9     |
-| Multi-Seq ASR XLM-R | 87.8         | 81.8     |   
+| N-Best-ASR ASR BERT  | 87.4         | 81.9     |
+| N-Best-ASR ASR XLM-R | 87.8         | 81.8     |   
 
 Results are average after 5 runs on the dataset, each having a unique random seed.
 
