@@ -1,19 +1,17 @@
 # N-Best-ASR-Transformer
 
-This repository contains code for Multi-Seq ASR BERT: A simplified approach to model ASR confusion in SLU. The paper has been accepted to ACL-IJCNLP 2021.
+This repository contains code for "N-Best-ASR-Transformer: Enhancing SLU Performance using Multiple ASR Hypotheses." The paper has been accepted to ACL-IJCNLP 2021.
 
 ## Introduction
-### About N-Best-ASR-Transformer
-Transformer models have achieved state-of-the-art generalization performance on various language understanding tasks but using them on raw Automatic Speech Recognition (ASR) output is sub-optimal because of transcription errors. Common approaches to mitigate this involve using richer output from ASR either in the form of transcription lattice or n-best hypotheses. Using lattices usually gives better performance at the cost of modifications in the architecture of models since they are designed to take plain text input. In our work, we use concatenated n-best ASR hypotheses as the input to the transformer encoder models like BERT. We show that this approach performs as well as the state-of-the-art approach on DSTC2 dataset. Since the input is closer in structure to text based transformers, our approach outperforms state-of-the-art WCN model in low data regimes. Additionally, since popular ASR APIs do not provide lattice level access, this simplification helps us to keep the downstream model relatively independent.  
+### N-Best-ASR-Transformer
+Spoken Language Understanding (SLU) systems parse speech into semantic structures like dialog acts and slots. This involves the use of an Automatic Speech Recognizer (ASR) to transcribe speech into multiple text alternatives (hypotheses). Transcription errors, common in ASRs, impact downstream SLU performance negatively. Approaches to mitigate such errors involve using richer information from the ASR, either in form of N-best hypotheses or word-lattices. We hypothesize that transformer models learn better with a simpler utterance representation using the concatenation of the N-best ASR alternatives, where each alternative is separated by a special delimiter [SEP]. In our work, we test our hypothesis by using concatenated N-best ASR alternatives as the input to transformer encoder models, namely BERT and XLM-RoBERTa, and achieve performance equivalent to the prior state-of-the-art model on DSTC2 dataset.  We also show that our approach significantly outperforms the prior state-of-the-art when subjected to the low data regime. Additionally, this methodology is accessible to users of third-party ASR APIs which do not provide word-lattice information.
 
 ### Architecture
-
 [![arch-1.png](https://i.postimg.cc/bwds3pR9/arch-1.png)](https://postimg.cc/RW5S0ryW)
 
 ### About Data
 
 ## Data
-
 We conduct our experiments on a benchmark SLU dataset which ASR alternatives, **DSTC2**. Origin data can be obtained [here](http://camdial.org/~mh521/dstc/).
 
 - Data preprocessing:
