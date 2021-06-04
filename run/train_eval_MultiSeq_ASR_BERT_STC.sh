@@ -59,7 +59,7 @@ pre_trained_model='bert'
 #NOTE : You need to pass this value parameter to --tod_pre_trained_model if you wish you use this model. 
 tod_pre_trained_model='multi-seq-asr-bert/ToD-BERT-jnt'
 
-python3 multi_seq_asr_bert_stc.py \
+python3 n_best_asr_bert.py \
     --dataset ${dataset} --dataroot ${dataroot} \
     --bert_model_name ${bert_model_name} ${fix_bert_model:+--fix_bert_model} \
     --deviceId ${device} --random_seed ${seed} --l2 ${l2} --dropout ${dp} --bert_dropout ${bert_dp} \
