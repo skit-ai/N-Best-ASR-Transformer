@@ -44,7 +44,7 @@ We build two classifiers, the first one for `act-slot` pairs and the second one 
   Run command:
 
   ```bash
-  ./run/train_eval_MultiSeq_ASR_BERT_STC.sh
+  ./run/train_eval_N_Best_ASR_Transformer_STC.sh
   ```
     
   Parameters: <br />
