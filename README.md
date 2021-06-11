@@ -7,7 +7,7 @@ This repository contains code for "N-Best-ASR-Transformer: Enhancing SLU Perform
 Spoken Language Understanding (SLU) systems parse speech into semantic structures like dialog acts and slots. This involves the use of an Automatic Speech Recognizer (ASR) to transcribe speech into multiple text alternatives (hypotheses). Transcription errors, common in ASRs, impact downstream SLU performance negatively. Approaches to mitigate such errors involve using richer information from the ASR, either in form of N-best hypotheses or word-lattices. We hypothesize that transformer models learn better with a simpler utterance representation using the concatenation of the N-best ASR alternatives, where each alternative is separated by a special delimiter [SEP]. In our work, we test our hypothesis by using concatenated N-best ASR alternatives as the input to transformer encoder models, namely BERT and XLM-RoBERTa, and achieve performance equivalent to the prior state-of-the-art model on DSTC2 dataset.  We also show that our approach significantly outperforms the prior state-of-the-art when subjected to the low data regime. Additionally, this methodology is accessible to users of third-party ASR APIs which do not provide word-lattice information.
 
 ### Architecture
-[![arch-1.png](https://i.postimg.cc/bwds3pR9/arch-1.png)](https://postimg.cc/RW5S0ryW)
+[![arch-1.png](https://i.postimg.cc/NGNs5vYp/arch-1.png)](https://postimg.cc/QVTGyPFT)
 
 ### About Data
 
@@ -67,7 +67,7 @@ We build two classifiers, the first one for `act-slot` pairs and the second one 
 
 ## Results
 
-Results of Multi-Seq ASR BERT and previous SOTA results:
+Results of Multi-Seq ASR BERT:
 
 | Model               | F1 score (%) | Acc. (%) |
 | ---------------     | ------------ | -------- |
