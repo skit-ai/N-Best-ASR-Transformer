@@ -79,7 +79,7 @@ Results are average after 5 runs on the dataset, each having a unique random see
 
 ## Citation
 
-If you use our work, please cite our work as follows:
+If you use our work, please cite our work (Citation will be shortly updated)
 
 ```
 
