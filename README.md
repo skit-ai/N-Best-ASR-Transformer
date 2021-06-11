@@ -12,7 +12,7 @@ Spoken Language Understanding (SLU) systems parse speech into semantic structure
 ### About Data
 
 ## Data
-We conduct our experiments on a benchmark SLU dataset which ASR alternatives, **DSTC2**. Origin data can be obtained [here](http://camdial.org/~mh521/dstc/).
+We conduct our experiments on a benchmark SLU dataset which ASR alternatives, **DSTC2**. Origin data can be obtained [here](https://github.com/matthen/dstc).
 
 - Data preprocessing:
     ```bash
