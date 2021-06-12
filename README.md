@@ -1,6 +1,6 @@
 # N-Best-ASR-Transformer
 
-This repository contains code for "N-Best-ASR-Transformer: Enhancing SLU Performance using Multiple ASR Hypotheses." The paper has been accepted to ACL-IJCNLP 2021.
+This repository contains code for "N-Best-ASR-Transformer: Enhancing SLU Performance using Multiple ASR Hypotheses." The paper has been accepted in ACL-IJCNLP 2021.
 
 ## Introduction
 ### N-Best-ASR-Transformer
