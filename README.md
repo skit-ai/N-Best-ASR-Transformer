@@ -1,6 +1,6 @@
 # N-Best-ASR-Transformer
 
-This repository contains code for "N-Best-ASR-Transformer: Enhancing SLU Performance using Multiple ASR Hypotheses." The paper has been accepted in ACL-IJCNLP 2021.
+This repository contains code for "N-Best-ASR-Transformer: Enhancing SLU Performance using Multiple ASR Hypotheses." The [paper](https://arxiv.org/abs/2106.06519) has been accepted in ACL-IJCNLP 2021.
 
 ## Introduction
 ### N-Best-ASR-Transformer
@@ -79,8 +79,15 @@ Results are average after 5 runs on the dataset, each having a unique random see
 
 ## Citation
 
-If you use our work, please cite our work (Citation will be shortly updated)
+If you use our work, please cite our work
 
 ```
-
+@misc{ganesan2021nbest,
+      title={N-Best ASR Transformer: Enhancing SLU Performance using Multiple ASR Hypotheses}, 
+      author={Karthik Ganesan and Pakhi Bamdev and Jaivarsan B and Amresh Venugopal and Abhinav Tushar},
+      year={2021},
+      eprint={2106.06519},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
 ```
